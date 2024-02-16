@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 
-const QuranScreen = () => {
+const HomeScreen = () => {
   const [surahs, setSurahs] = useState([]);
+  const [selectedSurah, setSelectedSurah] = useState(null);
+  const [verses, setVerses] = useState([]);
 
   useEffect(() => {
     fetch('https://api.alquran.cloud/v1/surah')
@@ -13,14 +15,26 @@ const QuranScreen = () => {
       .catch(error => console.error('Error fetching Quran surah names:', error));
   }, []);
 
+  useEffect(() => {
+    if (selectedSurah) {
+      // Fetch verses for the selected surah
+      fetch(`https://api.alquran.cloud/v1/surah/${selectedSurah.number}`)
+        .then(response => response.json())
+        .then(data => {
+          setVerses(data.data.ayahs);
+        })
+        .catch(error => console.error('Error fetching verses for surah:', error));
+    }
+  }, [selectedSurah]);
+
   const handleSurahPress = (surah) => {
-    // Add your logic when a surah is pressed
+    setSelectedSurah(surah);
     console.log(`Surah ${surah.number} is pressed`);
   };
 
   return (
     <View style={styles.container}>
-     
+      <Text style={styles.header}>Quran Surah Names</Text>
       <FlatList
         data={surahs}
         keyExtractor={(item) => item.number.toString()}
@@ -30,6 +44,19 @@ const QuranScreen = () => {
           </Pressable>
         )}
       />
+             
+      {selectedSurah && (
+        <View style={styles.verseContainer}>
+          <Text style={styles.header}>Verses of {selectedSurah.englishName}</Text>
+          <FlatList
+            data={verses}
+            keyExtractor={(item) => item.number.toString()}
+            renderItem={({ item }) => (
+              <Text>{`${item.number}. ${item.text}`}</Text>
+            )}
+          />
+        </View>
+      )}
     </View>
   );
 };
@@ -50,6 +77,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
+  verseContainer: {
+    marginTop: 20,
+  },
 });
 
-export default QuranScreen;
+export default HomeScreen;
