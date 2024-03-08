@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const [surahs, setSurahs] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [verses, setVerses] = useState([]);
   const [loading,setLoading] = useState(false);
-  useEffect(() => {
+   useEffect(() => {
     fetch("https://api.alquran.cloud/v1/surah")
       .then((response) => response.json())
       .then((data) => {
@@ -15,7 +15,7 @@ const HomeScreen = () => {
       .catch((error) =>
         console.error("Error fetching Quran surah names:", error)
       );
-  }, []);
+  }, []); 
 
   useEffect(() => {
     const surahInfo = async () => {
@@ -54,6 +54,7 @@ const HomeScreen = () => {
   const handleSurahPress = (surah) => {
     setSelectedSurah(surah);
     setLoading(true);
+    navigation.navigate('Library', { surah });
     // surahInfo()
     console.log(`Surah ${surah.number} is pressed`);
   };

@@ -1,23 +1,19 @@
+import React from 'react';
+import { View, Text } from 'react-native';
 
+const Library = ({ route }) => {
+  const { surah } = route.params; // Access passed surah data
+  
 
-import React from "react";
-import { View, StyleSheet, Text } from "react-native";
-
-const Library = () => {
   return (
-    <View style={styles.center}>
-      <Text>This is the library screen</Text>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>Surah Details:</Text>
+      <Text>Number: {surah.number}</Text>
+      <Text>English Name: {surah.englishName}</Text>
+      <Text>Name: {surah.name}</Text>
+      {/* Display other details as needed */}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    textAlign: "center",
-  },
-});
 
 export default Library;
