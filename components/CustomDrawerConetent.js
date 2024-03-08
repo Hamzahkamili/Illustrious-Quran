@@ -2,7 +2,7 @@ import { Text,StyleSheet,TouchableOpacity,View } from "react-native";
 const CustomDrawerContent = ({ navigation }) => {
     return (
       <View >
-       
+        <Text >Drawer Header</Text>
         <TouchableOpacity
          
           onPress={() => navigation.navigate("Illustrious Quran")}

@@ -3,6 +3,7 @@ import HomeScreen from "../screens/homeScreen";
 import Planner from "../screens/Planner";
 import Library from "../screens/library";
 import Profile from "../screens/profile";
+import VersesSlides from "./versesSlides";
 const BottomTab = createBottomTabNavigator();
 function BottomTabSlide(){
     return (
