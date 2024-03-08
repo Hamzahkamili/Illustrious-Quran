@@ -3,9 +3,6 @@ import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 
 const HomeScreen = ({navigation}) => {
   const [surahs, setSurahs] = useState([]);
-  const [selectedSurah, setSelectedSurah] = useState(null);
-  const [verses, setVerses] = useState([]);
-  const [loading,setLoading] = useState(false);
    useEffect(() => {
     fetch("https://api.alquran.cloud/v1/surah")
       .then((response) => response.json())
@@ -17,25 +14,7 @@ const HomeScreen = ({navigation}) => {
       );
   }, []); 
 
-  useEffect(() => {
-    const surahInfo = async () => {
-      if (selectedSurah) {
-        await fetch(
-          `https://api.alquran.cloud/v1/surah/${selectedSurah?.number}`
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            setVerses(data.data.ayahs);
-            setLoading(false);
-            console.log(data?.data?.ayahs);
-          })
-          .catch((error) =>
-            console.error("Error fetching verses for surah:", error)
-          );
-      }
-    };
-    surahInfo();
-  }, [selectedSurah]);
+  
   // const surahInfo = async () => {
   //   if (selectedSurah) {
   //     await fetch(
@@ -52,11 +31,9 @@ const HomeScreen = ({navigation}) => {
   //   }
   // };
   const handleSurahPress = (surah) => {
-    setSelectedSurah(surah);
-    setLoading(true);
-    navigation.navigate('Library', { surah });
+    navigation.navigate('Verses', { surah });
     // surahInfo()
-    console.log(`Surah ${surah.number} is pressed`);
+    // console.log(`Surah ${surah.number} is pressed`);
   };
 
   return (
@@ -77,7 +54,7 @@ const HomeScreen = ({navigation}) => {
         )}
       />
 
-      {(selectedSurah && !loading )&&(
+      {/* {(selectedSurah && !loading )&&(
         <View style={styles.verseContainer}>
           <Text style={styles.header}>
             Verses of {selectedSurah.englishName}
@@ -90,7 +67,7 @@ const HomeScreen = ({navigation}) => {
             )}
           />
         </View>
-      )}
+      )} */}
     </View>
   );
 };
