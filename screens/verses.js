@@ -31,7 +31,7 @@ const Verses = ({ route }) => {
   }, [surah]);
   
   return (
-    <View style={{ flex: 1}}>
+    <View  style={styles.background}>
       <View style={styles.headingContainer}>
         <Text>{surah.englishName}</Text>
         <Text>{surah.name}</Text>
@@ -43,7 +43,7 @@ const Verses = ({ route }) => {
             data={verses}
             keyExtractor={(item) => item.number.toString()}
             renderItem={({ item }) => (
-                <Text style={styles.verseText}>{`${item.text}`}</Text>
+                <Text style={styles.verseText}>{`${item.number}. ${item.text}`}</Text>
             )}
           />
       )}
@@ -52,8 +52,15 @@ const Verses = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    backgroundColor: '#fffaf5',
+  },
   headingContainer: {
+    backgroundColor: '#FBEDDC',
     margin: 15,
+    padding: 20,
+    borderRadius: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

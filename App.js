@@ -22,14 +22,12 @@ function BottomTabSlide() {
     
       initialRouteName="Illustrious Quran"
       screenOptions={{
-        headerStyle: { backgroundColor: "#795547" },
-        headerShown: false,
+        headerStyle: { backgroundColor: "#fffaf5" },
         tabBarActiveTintColor: "brown",
         tabBarInactiveTintColor: "#fceddc",
-
         tabBarStyle: {
           // position: 'absolute',
-          backgroundColor: "#795547",
+          backgroundColor: "#fffaf5",
           // borderRadius: 50,
           // bottom: 20,
           // marginHorizontal: 16
@@ -42,9 +40,11 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "Home",
+          headerTitleStyle: { color: "#795547" },
           tabBarLabel: "Home",
+          tabBarLabelStyle: { color: '#795547' },
           tabBarIcon: ({ size }) => (
-            <Ionicons name="home" size={size} color="#fceddc" />
+            <Ionicons name="home" size={size} color="#795547" />
           ),
         }}
       />
@@ -55,9 +55,11 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "Planner",
+          headerTitleStyle: { color: "#795547" },
           tabBarLabel: "Planner",
+          tabBarLabelStyle: { color: '#795547' },
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="book" size={size} color="#fceddc" />
+            <Ionicons name="book" size={size} color="#795547" />
           ),
         }}
       />
@@ -68,9 +70,11 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "Profile",
+          headerTitleStyle: { color: "#795547" },
           tabBarLabel: "Profile",
+          tabBarLabelStyle: { color: '#795547' },
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="happy" size={size} color="#fceddc" />
+            <Ionicons name="happy" size={size} color="#795547" />
           ),
         }}
       />
@@ -92,7 +96,11 @@ export default function App() {
         <Stack.Screen
           name="Verses"
           component={Verses}
-          options={{ title: "Verses" }}
+          options={{ title: "Verses", headerTitleStyle: { color: "#795547"}, headerStyle: { backgroundColor: "#fffaf5" } }}
+          // screenOptions={{
+          //   headerStyle: { backgroundColor: "#795547" },
+          //   headerTintColor: "#fceddc",
+          // }}
         />
         {/* <Stack.Screen name="Profile" component={Profile} /> */}
       </Stack.Navigator>
