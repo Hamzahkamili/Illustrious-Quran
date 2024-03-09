@@ -15,7 +15,7 @@ const Planner = ({ navigation }) => {
 
   return (
     <View style={styles.center}>
-      <Text>This is the Planner screen</Text>
+      <Text >This is the Planner screen</Text>
     </View>
     // <View style={{ flex: 1, padding: 20 }}>
     //   <FlatList
@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     textAlign: "center",
+   
   },
 });
 
