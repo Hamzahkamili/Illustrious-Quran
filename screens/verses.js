@@ -9,6 +9,8 @@ const Verses = ({ route }) => {
   const [translations, setTranslations] = useState([]);
   const [audios, setAudios] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [soundObject, setSound] = useState( new Audio.Sound("https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3"));
 
   useEffect(() => {
     // Fetch surah information
@@ -44,7 +46,7 @@ const Verses = ({ route }) => {
 
     const fetchAudio = async () => {
       setLoading(true);
-      await fetch(`https://api.alquran.cloud/v1/surah/1/ar.abdulbasitmurattal`)
+      await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.abdulbasitmurattal`)
         .then((response) => response.json())
         .then((data) => {
           setAudios(data.data.ayahs);
@@ -59,6 +61,8 @@ const Verses = ({ route }) => {
     fetchEnglishTranslation();
     fetchAudio();
     setLoading(false);
+
+    // soundObject.loadAsync({uri:""})
 
   }, [surah]);
 
@@ -85,12 +89,37 @@ const Verses = ({ route }) => {
   // }
   // console.log(verses);
   // console.log(translations);
+  // soundObject.loadAsync({uri:"https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3"})
 
-  async function audioPlayHandler(index) {
-    console.log('Audio play');
+  async function audioLoadHandler(index) {
+    await soundObject.unloadAsync();
+    console.log(index);
     const url = audios[index].audio;
-    const { sound } = await Audio.Sound.createAsync({uri: url});
-    await sound.playAsync();
+    await soundObject.loadAsync({uri:url})
+    await audioHandler()
+    // soundObject.unloadAsync();
+  }
+
+  async function audioHandler() {
+    console.log('Audio play');
+    // const url = audios[index].audio;
+    // const { sound } = await Audio.Sound.createAsync({uri: url});
+    // await sound.playAsync();
+    if (!playing) {
+      try {
+        setPlaying(true);
+        await soundObject.playAsync();
+      } catch (error) {
+        console.error("Error playing audio:", error);
+      }
+    } else {
+      try {
+        setPlaying(false);
+        await soundObject.stopAsync();
+      } catch (error) {
+        console.error("Error stopping audio:", error);
+      }
+    }
   }
 
   return (
@@ -113,11 +142,18 @@ const Verses = ({ route }) => {
                 <Text style={styles.translationText}>{`${translations[index]?.text}`}</Text>
               )}
               <View style={styles.controlsContainer}>
-                <Button
-                  onPress={audioPlayHandler.bind(this, index)}
-                  title="▶️"
-                  color="#841584"
-                />
+                {!playing ? (
+                  <Button
+                    onPress={audioLoadHandler.bind(this, index)}
+                    title="▶️"
+                    color="#841584"
+                  /> ) : (
+                  <Button
+                    onPress={audioLoadHandler.bind(this, index)}
+                    title="⏸️"
+                    color="#841584"
+                  /> )
+                }
               </View>
             </View>
           )}
@@ -153,6 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   controlsContainer: {
+    marginVertical: 10,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     backgroundColor: '#fceddc',
