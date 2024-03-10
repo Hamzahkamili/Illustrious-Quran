@@ -44,7 +44,7 @@ const Verses = ({ route }) => {
 
     const fetchAudio = async () => {
       setLoading(true);
-      await fetch(`https://api.alquran.cloud/v1/surah/1/ar.abdulbasitmurattal`)
+      await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.abdulbasitmurattal`)
         .then((response) => response.json())
         .then((data) => {
           setAudios(data.data.ayahs);
