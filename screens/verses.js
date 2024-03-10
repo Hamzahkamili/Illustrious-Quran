@@ -1,50 +1,97 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Button } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
+import { Audio } from 'expo-av';
 
 const Verses = ({ route }) => {
   const { surah } = route.params;
   const [verses, setVerses] = useState([]);
   const [translations, setTranslations] = useState([]);
+  const [audios, setAudios] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-
     // Fetch surah information
+    setLoading(true);
     const fetchSurahInfo = async () => {
       if (surah) {
         await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}`)
           .then((response) => response.json())
           .then((data) => {
             setVerses(data.data.ayahs);
-            setLoading(false);
           })
           .catch((error) =>
-            console.error("Error fetching verses for surah:", error)
+          console.error("Error fetching verses for surah:", error)
           );
-      }
+        }
     };
 
     // Fetch English translation
     const fetchEnglishTranslation = async () => {
+      setLoading(true);
       await fetch(`https://api.alquran.cloud/v1/quran/en.asad`)
         .then((response) => response.json())
         .then((data) => {
           const surahTranslation = data.data.surahs.find(
             (s) => s.number === surah.number
           );
-          setTranslations(surahTranslation?.ayahs || []);
+          setTranslations(surahTranslation?.ayahs);
         })
         .catch((error) =>
-          console.error("Error fetching English translation:", error)
+        console.error("Error fetching English translation:", error)
+        );
+    };
+
+    const fetchAudio = async () => {
+      setLoading(true);
+      await fetch(`https://api.alquran.cloud/v1/surah/1/ar.abdulbasitmurattal`)
+        .then((response) => response.json())
+        .then((data) => {
+          setAudios(data.data.ayahs);
+        })
+        .catch((error) =>
+        console.error("Error fetching English translation:", error)
         );
     };
 
     // Call both functions
     fetchSurahInfo();
     fetchEnglishTranslation();
+    fetchAudio();
+    setLoading(false);
+
   }, [surah]);
+
+  if (loading || verses.length === 0 || translations.length === 0) {
+    return (
+      <View>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+  // if (!verses) {
+  //   return (
+  //     <View>
+  //       <Text>No verses found</Text>
+  //     </View>
+  //   );
+  // }
+  // if (!translations) {
+  //   return (
+  //     <View>
+  //       <Text>No translations found</Text>
+  //     </View>
+  //   );
+  // }
+  // console.log(verses);
+  // console.log(translations);
+
+  async function audioPlayHandler(index) {
+    console.log('Audio play');
+    const url = audios[index].audio;
+    const { sound } = await Audio.Sound.createAsync({uri: url});
+    await sound.playAsync();
+  }
 
   return (
     <View  style={styles.background}>
@@ -65,6 +112,13 @@ const Verses = ({ route }) => {
               {translations.length > 0 && (
                 <Text style={styles.translationText}>{`${translations[index]?.text}`}</Text>
               )}
+              <View style={styles.controlsContainer}>
+                <Button
+                  onPress={audioPlayHandler.bind(this, index)}
+                  title="▶️"
+                  color="#841584"
+                />
+              </View>
             </View>
           )}
         />
@@ -97,6 +151,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  controlsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    backgroundColor: '#fceddc',
   },
   verseText: {
     textAlign: 'right',
