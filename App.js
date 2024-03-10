@@ -15,7 +15,16 @@ import HomeScreen from "./screens/homeScreen";
 
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();
-
+const Drawer = createDrawerNavigator();
+function DrawerSlide() {
+  return (
+    <Drawer.Navigator screenOptions={{ headerShown: true }}>
+      <Drawer.Screen name="Illustrious Quran" component={HomeScreen} />
+      <Drawer.Screen name="Planner" component={Planner} />
+      <Drawer.Screen name="Profile" component={Profile} />
+    </Drawer.Navigator>
+  );
+}
 function BottomTabSlide() {
   return (
     <BottomTab.Navigator
@@ -83,6 +92,7 @@ export default function App() {
     <NavigationContainer >
       {/* <Slides /> */}
       <Stack.Navigator>
+        
         <Stack.Screen
           name="HomeScreen"
           component={BottomTabSlide}
