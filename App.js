@@ -1,45 +1,39 @@
 import { StyleSheet } from "react-native";
-// import VersesSlides from "./components/versesSlides";
 import Home from "./screens/homeScreen";
 import Planner from "./screens/Planner"; // Import both screens
 import Verses from "./screens/verses";
 import Profile from "./screens/profile";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import Settings from "./screens/Settings";
+// import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import HomeScreen from "./screens/homeScreen";
+// import HomeScreen from "./screens/homeScreen";
 
-// import Slides from "./components/slides";
 
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();
-const Drawer = createDrawerNavigator();
-function DrawerSlide() {
-  return (
-    <Drawer.Navigator screenOptions={{ headerShown: true }}>
-      <Drawer.Screen name="Illustrious Quran" component={HomeScreen} />
-      <Drawer.Screen name="Planner" component={Planner} />
-      <Drawer.Screen name="Profile" component={Profile} />
-    </Drawer.Navigator>
-  );
-}
+// const Drawer = createDrawerNavigator();
+// function DrawerSlide() {
+//   return (
+//     <Drawer.Navigator screenOptions={{ headerShown: true }}>
+//       <Drawer.Screen name="Illustrious Quran" component={HomeScreen} />
+//       <Drawer.Screen name="Planner" component={Planner} />
+//       <Drawer.Screen name="Profile" component={Profile} />
+//     </Drawer.Navigator>
+//   );
+// }
 function BottomTabSlide() {
   return (
     <BottomTab.Navigator
-    
       initialRouteName="Illustrious Quran"
       screenOptions={{
         headerStyle: { backgroundColor: "#fffaf5" },
         tabBarActiveTintColor: "brown",
         tabBarInactiveTintColor: "#fceddc",
         tabBarStyle: {
-          // position: 'absolute',
           backgroundColor: "#fffaf5",
-          // borderRadius: 50,
-          // bottom: 20,
-          // marginHorizontal: 16
         },
       }}
     >
@@ -48,7 +42,7 @@ function BottomTabSlide() {
         component={Home}
         options={{
           headerShown: true,
-          title: "Home",
+          title: "Illustrious Quran",
           headerTitleStyle: { color: "#795547" },
           tabBarLabel: "Home",
           tabBarLabelStyle: { color: '#795547' },
@@ -84,6 +78,20 @@ function BottomTabSlide() {
           tabBarLabelStyle: { color: '#795547' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="happy" size={size} color="#795547" />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          headerShown: true,
+          title: "Settings",
+          headerTitleStyle: { color: "#795547" },
+          tabBarLabel: "Settings",
+          tabBarLabelStyle: { color: '#795547' },
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={size} color="#795547" />
           ),
         }}
       />
