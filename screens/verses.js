@@ -1,51 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Button, ActivityIndicator, Image, ImageBackground } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av';
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useSelector } from "react-redux"
+
+import mosque from '../assets/mosque.png';
 
 const Verses = ({ route }) => {
+  const arabicText = useSelector((state) => state.settings.arabicText)
+  const language = useSelector((state) => state.settings.language)
+  const author = useSelector((state) => state.settings.author)
+  console.log(arabicText, language, author);
+  
   const { surah } = route.params;
   // console.log(typeof(Number(surah.chapter)));
   const [verses, setVerses] = useState([]);
-  const [translations, setTranslations] = useState([]);
+  // const [translations, setTranslations] = useState([]);
   const [audios, setAudios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState( new Audio.Sound(""));
+
+  // const arabicText = "simpleClean";
+  // const language = "hi";
+  // const author = "farooq";
 
   useEffect(() => {
     // Fetch surah information
     setLoading(true);
     const fetchSurahInfo = async () => {
       if (surah) {
-        await fetch(`https://api.alquran.cloud/v1/surah/${Number(surah.chapter)}`)
+        await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
           .then((response) => response.json())
           .then((data) => {
-            setVerses(data.data.ayahs);
+            data?.data.sort((a, b) => a.verse - b.verse); 
+            setVerses(data?.data);
           })
           .catch((error) =>
           console.error("Error fetching verses for surah:", error)
           );
         }
     };
-
-    // Fetch English translation
-    const fetchEnglishTranslation = async () => {
-      setLoading(true);
-      await fetch(`https://api.alquran.cloud/v1/quran/en.asad`)
-        .then((response) => response.json())
-        .then((data) => {
-          const surahTranslation = data.data.surahs.find(
-            (s) => s.number === Number(surah.chapter)
-          );
-          setTranslations(surahTranslation?.ayahs);
-        })
-        .catch((error) =>
-        console.error("Error fetching English translation:", error)
-        );
-    };
-
+    
     const fetchAudio = async () => {
       setLoading(true);
       await fetch(`https://api.alquran.cloud/v1/surah/${surah.chapter}/ar.abdulbasitmurattal`)
@@ -60,14 +57,14 @@ const Verses = ({ route }) => {
 
     // Call both functions
     fetchSurahInfo();
-    fetchEnglishTranslation();
+    // fetchEnglishTranslation();
     fetchAudio();
     setLoading(false);
     // soundObject.loadAsync({uri:""})
 
   }, [surah]);
 
-  if (loading || verses.length === 0 || translations.length === 0 || audios.length === 0) {
+  if (loading || verses.length === 0 || audios.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#795547" />
@@ -81,13 +78,13 @@ const Verses = ({ route }) => {
       </View>
     );
   }
-  if (!translations) {
-    return (
-      <View>
-        <Text>No translations found</Text>
-      </View>
-    );
-  }
+  // if (!translations) {
+  //   return (
+  //     <View>
+  //       <Text>No translations found</Text>
+  //     </View>
+  //   );
+  // }
 
   // soundObject.loadAsync({uri:"https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3"})
 
@@ -122,8 +119,17 @@ const Verses = ({ route }) => {
   return (
     <View  style={styles.background}>
       <View style={styles.headingContainer}>
-        <Text>{surah.arabicName}</Text>
-        <Text>{surah.name}</Text>
+        {/* <Image source={mosque}></Image> */}
+        <View style={styles.heading}>
+          <Text style={styles.title}>{surah.name}</Text>
+          <Text>{surah.arabicName}</Text>
+          <Text>Revelation: {surah.revelationPlace}</Text>
+          <Text>Chapter: {surah.chapter}</Text>
+          <Text>Verses: {surah.totalVerses}</Text>
+        </View>
+        <View>
+          <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
+        </View>
       </View>
 
       {/* Display verses with translations */}
@@ -131,7 +137,7 @@ const Verses = ({ route }) => {
         <FlatList
           style={styles.verseContainer}
           data={verses}
-          keyExtractor={(item) => item.number.toString()}
+          keyExtractor={(item) => item._id}
           renderItem={({ item, index }) => (
             <View style={styles.verseRow}>
                <View style={styles.controlsContainer}>
@@ -149,12 +155,13 @@ const Verses = ({ route }) => {
                       /> )
                     }
                 </View>
-                <Text>{index + 1}</Text>
+                <Text>{item.verse}</Text>
               </View>
-              <Text style={styles.verseText}>{item.text}</Text>
-              {translations.length > 0 && (
+              <Text style={styles.verseText}>{item.data.text}</Text>
+              <Text style={styles.translationText}>{item.data.translation}</Text>
+              {/* {translations.length > 0 && (
                 <Text style={styles.translationText}>{`${translations[index]?.text}`}</Text>
-              )}
+              )} */}
             </View>
           )}
         />
@@ -180,6 +187,18 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    height: 150,
+  },
+  heading: {
+    flexDirection: 'column',
+  },
+  title: {
+    fontSize: 24
+  },
+  mosqueImage: {
+    flex: 1,
+    width: 100,
+    justifyContent: "center"
   },
   verseContainer: {
     margin: 8,
@@ -204,11 +223,12 @@ const styles = StyleSheet.create({
   },
   verseText: {
     textAlign: 'right',
-    lineHeight: 40,
+    lineHeight: 35,
     fontSize: 20,
     flex: 1,
   },
   translationText: {
+    marginTop: 25,
     flex: 1,
   },
 });

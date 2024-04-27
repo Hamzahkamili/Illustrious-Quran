@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 
-const Planner = ({ navigation }) => {
+const Bookmark = ({ navigation }) => {
 //   const [dummyItems, setDummyItems] = useState([
 //     { id: 1, title: 'Item 1' },
 //     { id: 2, title: 'Item 2' },
@@ -41,5 +41,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Planner;
+export default Bookmark;
 

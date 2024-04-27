@@ -1,24 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 
 const HomeScreen = ({ navigation }) => {
   const [surahs, setSurahs] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all")
       .then((response) => response.json())
       .then((data) => {
         data?.data.sort((a, b) => a.chapter - b.chapter); 
         setSurahs(data?.data);
+        setLoading(false);
       })
-      .catch((error) =>
+      .catch((error) => {
         console.error("Error fetching Quran surah names:", error)
-      );
+        setLoading(false)
+      });
   }, []);
 
   const handleSurahPress = (surah) => {
     navigation.navigate('Verses', { surah });
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#795547" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -51,6 +63,11 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     padding: 9,

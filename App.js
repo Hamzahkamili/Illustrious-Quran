@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import Home from "./screens/homeScreen";
-import Planner from "./screens/Planner"; // Import both screens
+import Bookmark from "./screens/Bookmark"; // Import both screens
 import Verses from "./screens/verses";
 import Profile from "./screens/profile";
 import Settings from "./screens/Settings";
@@ -10,6 +10,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 // import HomeScreen from "./screens/homeScreen";
+import {Provider} from 'react-redux';
+import {store} from './store/store'
 
 
 const Stack = createStackNavigator();
@@ -53,13 +55,13 @@ function BottomTabSlide() {
       />
 
       <BottomTab.Screen
-        name="Planner"
-        component={Planner}
+        name="Bookmark"
+        component={Bookmark}
         options={{
           headerShown: true,
-          title: "Planner",
+          title: "Bookmark",
           headerTitleStyle: { color: "#795547" },
-          tabBarLabel: "Planner",
+          tabBarLabel: "Bookmark",
           tabBarLabelStyle: { color: '#795547' },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book" size={size} color="#795547" />
@@ -101,6 +103,7 @@ function BottomTabSlide() {
 
 export default function App() {
   return (
+    <Provider store={store}>
     <NavigationContainer >
       {/* <Slides /> */}
       <Stack.Navigator>
@@ -123,6 +126,7 @@ export default function App() {
         {/* <Stack.Screen name="Profile" component={Profile} /> */}
       </Stack.Navigator>
     </NavigationContainer>
+    </Provider>
   );
 }
 
