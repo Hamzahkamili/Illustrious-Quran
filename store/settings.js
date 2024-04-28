@@ -9,7 +9,6 @@ const settingsSlice = createSlice({
     },
     reducers: {
         addArabicText: (state, action) => {
-            // console.log(action.payload.id);
             state.arabicText = action.payload.id
         },
         addLanguage: (state, action) => {

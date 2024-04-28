@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator, Image, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Button, ActivityIndicator, Image, ImageBackground, TouchableOpacity } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av';
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,7 +11,7 @@ const Verses = ({ route }) => {
   const arabicText = useSelector((state) => state.settings.arabicText)
   const language = useSelector((state) => state.settings.language)
   const author = useSelector((state) => state.settings.author)
-  console.log(arabicText, language, author);
+  // console.log(arabicText, language, author);
   
   const { surah } = route.params;
   // console.log(typeof(Number(surah.chapter)));
@@ -91,7 +91,7 @@ const Verses = ({ route }) => {
   async function audioLoadHandler(i) {
     await soundObject.loadAsync({uri:audios[i].audio})
     await audioHandler()
-    console.log('playing', i);
+    // console.log('playing', i);
     // const url = audios[index].audio;
     // await soundObject.loadAsync({uri:url})
     // await audioHandler()
@@ -104,7 +104,7 @@ const Verses = ({ route }) => {
   }
 
   async function audioHandler() {
-    console.log('Audio play');
+    // console.log('Audio play');
     // const url = audios[index].audio;
     // const { sound } = await Audio.Sound.createAsync({uri: url});
     // await sound.playAsync();
@@ -141,19 +141,33 @@ const Verses = ({ route }) => {
           renderItem={({ item, index }) => (
             <View style={styles.verseRow}>
                <View style={styles.controlsContainer}>
-                <View>
+                <View style={{flexDirection: 'row', gap: 10}}>
                   {!playing ? (
-                    <Button
-                    onPress={audioLoadHandler.bind(this, index)}
-                    title="Play"
-                    color="#841584"
-                    /> ) : (
-                      <Button
-                      onPress={audioStopHandler}
-                      title="Stop"
-                      color="#841584"
-                      /> )
-                    }
+                    <TouchableOpacity onPress={audioLoadHandler.bind(this, index)}>
+                      <Ionicons name="play" size={24} color="#795547" />
+                    </TouchableOpacity>
+                    // <Button
+                    // onPress={audioLoadHandler.bind(this, index)}
+                    // title="Play"
+                    // color="#841584"
+                    // /> 
+                    ) : (
+                      <TouchableOpacity onPress={audioStopHandler}>
+                        <Ionicons name="pause" size={24} color="#795547" />
+                      </TouchableOpacity>
+                      // <Button
+                      // onPress={audioStopHandler}
+                      // title="Stop"
+                      // color="#841584"
+                      // /> 
+                    )
+                  }
+                  <TouchableOpacity onPress={(e) => console.log(e)}>
+                      <Ionicons name="bookmark" size={24} color="#795547" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={(e) => console.log(e)}>
+                      <Ionicons name="share" size={24} color="#795547" />
+                  </TouchableOpacity>
                 </View>
                 <Text>{item.verse}</Text>
               </View>
@@ -215,7 +229,8 @@ const styles = StyleSheet.create({
   controlsContainer: {
     borderRadius: 5,
     marginVertical: 10,
-    paddingRight: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

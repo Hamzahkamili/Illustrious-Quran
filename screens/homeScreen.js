@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Modal, Image, TouchableOpacity } from "react-native";
+
+import mosque from '../assets/mosque.png';
 
 const HomeScreen = ({ navigation }) => {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -34,6 +37,21 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Modal visible={open} animationType="none">
+        <View style={styles.modelContainer}>
+            <View>
+                <Text style={styles.title}>Illustrious Quran</Text>
+                <Text style={styles.subtitle}>Learn quran and</Text>
+                <Text style={styles.subtitle}>recite once everyday</Text>
+            </View>
+            <View style={{alignItems: 'center'}}>
+                <Image source={mosque} />
+                <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
+                    <Text style={styles.buttonText}>Get Started</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+      </Modal>
       <FlatList
         data={surahs}
         keyExtractor={(item) => item._id}
@@ -63,6 +81,32 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  modelContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#795547',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#795547',
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#795547',
+    paddingVertical: 15,
+    width: 150,
+    borderRadius: 15,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
