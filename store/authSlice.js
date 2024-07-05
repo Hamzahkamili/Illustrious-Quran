@@ -10,13 +10,13 @@ const authSlice = createSlice({
     },
     reducers: {
         addUserToken: (state, action) => {
-            // console.log(action.payload.user);
-            // console.log(action.payload.token);
+            console.log(action.payload.user);
+            console.log(action.payload.token);
             state.token = action.payload.token
             state.user = action.payload.user
             state.isAthenticated = true
-            AsyncStorage.setItem('token', action.payload.token)
             AsyncStorage.setItem('user', JSON.stringify(action.payload.user))
+            AsyncStorage.setItem('token', action.payload.token)
         },
         logout: (state, action) => {
             state.token = null;

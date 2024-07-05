@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Modal, Image, TouchableOpacity } from "react-native";
-
+import * as SQLite from 'expo-sqlite';
 import mosque from '../assets/mosque.png';
 
 const HomeScreen = ({ navigation }) => {
@@ -8,19 +8,85 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(true);
 
+  const initDB = async () => {
+    const db = await SQLite.openDatabaseAsync('surahs.db');
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS surahs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chapter TEXT NOT NULL,
+        totalVerses INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        nameTranslation TEXT,
+        arabicName TEXT NOT NULL,
+        revelationPlace TEXT,
+        revelationOrder INTEGER,
+        summarySource TEXT,
+        summaryText TEXT
+      );
+    `);
+    return db;
+  };
+
+  const insertSurahs = async (db, surahs) => {
+    await db.execAsync('DELETE FROM surahs');
+    for (const surah of surahs) {
+      await db.runAsync(
+        `INSERT INTO surahs (chapter, totalVerses, name, nameTranslation, arabicName, revelationPlace, revelationOrder, summarySource, summaryText) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        surah.chapter,
+        surah.totalVerses,
+        surah.name,
+        surah.nameTranslation,
+        surah.arabicName,
+        surah.revelationPlace,
+        surah.revelationOrder,
+        surah.summary?.source,
+        surah.summary?.text
+      );
+    }
+  };
+
+  const fetchSurahsFromDB = async (db) => {
+    const allRows = await db.getAllAsync('SELECT * FROM surahs');
+    const dbSurahs = allRows.map(item => ({
+      chapter: item.chapter,
+      totalVerses: item.totalVerses,
+      name: item.name,
+      nameTranslation: item.nameTranslation,
+      arabicName: item.arabicName,
+      revelationPlace: item.revelationPlace,
+      revelationOrder: item.revelationOrder,
+      summary: {
+        source: item.summarySource,
+        text: item.summaryText
+      }
+    }));
+    setSurahs(dbSurahs);
+  };
+
   useEffect(() => {
-    setLoading(true);
-    fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all")
-      .then((response) => response.json())
-      .then((data) => {
-        data?.data.sort((a, b) => a.chapter - b.chapter); 
-        setSurahs(data?.data);
+    const initialize = async () => {
+      const db = await initDB();
+      
+      try {
+        if (surahs.length < 0) {
+          setLoading(true);
+          const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
+          const data = await response.json();
+          data?.data.sort((a, b) => a.chapter - b.chapter);
+          setSurahs(data?.data);
+          await insertSurahs(db, data?.data);
+        }
+      } catch (error) {
+        console.error("Error fetching Quran surah names:", error);
+      } finally {
+        await fetchSurahsFromDB(db);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching Quran surah names:", error)
-        setLoading(false)
-      });
+      }
+    };
+
+    initialize();
   }, []);
 
   const handleSurahPress = (surah) => {
@@ -29,9 +95,16 @@ const HomeScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#795547" />
-      </View>
+        <View style={styles.modelContainer}>
+          <View>
+            <Text style={styles.title}>Illustrious Quran</Text>
+            <Text style={styles.subtitle}>Learn quran and</Text>
+            <Text style={styles.subtitle}>recite once everyday</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Image source={mosque} />
+          </View>
+        </View>
     );
   }
 
@@ -39,39 +112,35 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Modal visible={open} animationType="none">
         <View style={styles.modelContainer}>
-            <View>
-                <Text style={styles.title}>Illustrious Quran</Text>
-                <Text style={styles.subtitle}>Learn quran and</Text>
-                <Text style={styles.subtitle}>recite once everyday</Text>
-            </View>
-            <View style={{alignItems: 'center'}}>
-                <Image source={mosque} />
-                <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
-                    <Text style={styles.buttonText}>Get Started</Text>
-                </TouchableOpacity>
-            </View>
+          <View>
+            <Text style={styles.title}>Illustrious Quran</Text>
+            <Text style={styles.subtitle}>Learn quran and</Text>
+            <Text style={styles.subtitle}>recite once everyday</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Image source={mosque} />
+            <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
+              <Text style={styles.buttonText}>Get Started</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
       <FlatList
         data={surahs}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item.chapter.toString()}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => handleSurahPress(item)}
-          
-          >
-            {/* <Text style={styles.surahItem}>{`${item.chapter}. ${item.name} - ${item.arabicName}`}</Text> */}
+          <Pressable onPress={() => handleSurahPress(item)}>
             <View style={styles.surahContainer}>
-                <View style={styles.innerContainer}>
-                  <View style={styles.numberContainer}>
-                    <Text style={styles.surahItem}>{item.chapter}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.surahItem}>{item.name}</Text>
-                    <Text style={styles.surahDescription}>{item.totalVerses} Verses | {item.revelationPlace}</Text>
-                  </View>
+              <View style={styles.innerContainer}>
+                <View style={styles.numberContainer}>
+                  <Text style={styles.surahItem}>{item.chapter}</Text>
                 </View>
-                <Text style={styles.surahItem} >{item.arabicName}</Text>
+                <View>
+                  <Text style={styles.surahItem}>{item.name}</Text>
+                  <Text style={styles.surahDescription}>{item.totalVerses} Verses | {item.revelationPlace}</Text>
+                </View>
+              </View>
+              <Text style={styles.surahItem}>{item.arabicName}</Text>
             </View>
           </Pressable>
         )}
