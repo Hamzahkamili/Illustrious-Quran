@@ -4,6 +4,8 @@ import Bookmark from "./screens/Bookmark"; // Import both screens
 import Verses from "./screens/verses";
 import Profile from "./screens/profile";
 import Settings from "./screens/Settings";
+import Login from "./screens/Login";
+import Signup from "./screens/Signup";
 // import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -123,7 +125,8 @@ export default function App() {
           //   headerTintColor: "#fceddc",
           // }}
         />
-        {/* <Stack.Screen name="Profile" component={Profile} /> */}
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Signup" component={Signup} />
       </Stack.Navigator>
     </NavigationContainer>
     </Provider>

@@ -5,7 +5,7 @@ const settingsSlice = createSlice({
     initialState: {
         arabicText: "simple",
         language: "en",
-        author: "qarai",
+        author: "Ahmed Ali",
     },
     reducers: {
         addArabicText: (state, action) => {

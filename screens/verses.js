@@ -22,16 +22,12 @@ const Verses = ({ route }) => {
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState( new Audio.Sound(""));
 
-  // const arabicText = "simpleClean";
-  // const language = "hi";
-  // const author = "farooq";
-
   useEffect(() => {
     // Fetch surah information
     setLoading(true);
     const fetchSurahInfo = async () => {
       if (surah) {
-        await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
+        await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
           .then((response) => response.json())
           .then((data) => {
             data?.data.sort((a, b) => a.verse - b.verse); 
@@ -89,6 +85,8 @@ const Verses = ({ route }) => {
   // soundObject.loadAsync({uri:"https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3"})
 
   async function audioLoadHandler(i) {
+    setPlaying(true);
+    await soundObject.unloadAsync();
     await soundObject.loadAsync({uri:audios[i].audio})
     await audioHandler()
     // console.log('playing', i);
@@ -109,7 +107,6 @@ const Verses = ({ route }) => {
     // const { sound } = await Audio.Sound.createAsync({uri: url});
     // await sound.playAsync();
     try {
-      setPlaying(true);
       await soundObject.playAsync();
     } catch (error) {
       console.error("Error playing audio:", error);

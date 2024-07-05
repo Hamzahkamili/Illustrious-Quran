@@ -4,7 +4,8 @@ import { Text, View, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react
 import RadioButtonRN from 'radio-buttons-react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDispatch } from "react-redux"
-import { addArabicText } from '../../store/settings'
+import { addArabicText } from '../../store/settingsSlice'
+import { ScrollView } from 'react-native-gesture-handler';
 
 const ArabicText = () => {
     const dispatch = useDispatch();
@@ -14,8 +15,9 @@ const ArabicText = () => {
     const [label, setLabel] = useState([])
 
     useEffect(() => {
+      setLabel([])
       setLoading(true);
-      fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/arabicText")
+      fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
         .then((response) => response.json())
         .then((data) => {
           // console.log(data.data);
@@ -44,24 +46,26 @@ const ArabicText = () => {
     function handleRadioClick(e) {
       // console.log(e);
       dispatch(addArabicText({id: e.label}))
+      settextModelOpen(false)
     }
 
     return <>
       <View style={{marginVertical: 5}}>
+        <Text>Styles:</Text> 
         <TouchableOpacity style={styles.modelButton} onPress={(e) => settextModelOpen(true)}>
-          <Text>Arabic Text Style</Text> 
+          <Text style={styles.text}>Arabic Text Style</Text> 
         </TouchableOpacity>
         <Modal visible={textModelOpen} animationType='slide' presentationStyle='pageSheet'>
           <TouchableOpacity style={{marginTop: 15, marginLeft: 380}} onPress={(e) => settextModelOpen(false)}>
             <Ionicons name="close-sharp" size={25} color="#795547" />
           </TouchableOpacity>
   
-          <View style={{padding: 20}}>
+          <ScrollView style={{padding: 20}}>
             <RadioButtonRN
               data={label}
               selectedBtn={(e) => handleRadioClick(e)}
             />
-          </View>
+          </ScrollView>
         </Modal>
       </View>
     </>
@@ -71,10 +75,15 @@ export default ArabicText
 
 const styles = StyleSheet.create({
     modelButton: {
-      borderWidth: 1,
-      borderBlockColor: 'black',
+      borderWidth: 3,
+      borderColor: '#D7A86E',
       paddingHorizontal: 15,
       paddingVertical: 15,
-      borderRadius: 10,
+      borderRadius: 5,
+      marginTop: 5,
+    },
+    text: {
+      color: '#795547',
+      fontSize: 18,
     },
 })
