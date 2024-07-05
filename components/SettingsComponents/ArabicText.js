@@ -28,7 +28,7 @@ const ArabicText = () => {
           setLoading(false);
         })
         .catch((error) =>
-          console.error("Error fetching Quran surah names:", error)
+          console.error("Error fetching Quran arabic text:", error)
         );
     setLoading(false);
     }, []);

@@ -26,7 +26,7 @@ const Translation = () => {
             setLoading(false);
           })
           .catch((error) =>
-            console.error("Error fetching Quran surah names:", error)
+            console.error("Error fetching Quran translation availible languages:", error)
           );
     }, []);
 

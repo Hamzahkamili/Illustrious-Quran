@@ -72,7 +72,7 @@ const HomeScreen = ({ navigation }) => {
       try {
         if (surahs.length < 0) {
           setLoading(true);
-          const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
+          const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
           const data = await response.json();
           data?.data.sort((a, b) => a.chapter - b.chapter);
           setSurahs(data?.data);
