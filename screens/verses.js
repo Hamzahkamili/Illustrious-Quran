@@ -107,7 +107,8 @@ const Verses = ({ route }) => {
 
   const fetchSurahData = async () => {
     try {
-      const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
+      // const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
+      const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${surah.chapter}`);
       const data = await response.json();
       data?.data.sort((a, b) => a.verse - b.verse);
       return data?.data;

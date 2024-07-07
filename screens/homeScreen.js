@@ -73,6 +73,7 @@ const HomeScreen = ({ navigation }) => {
     console.log("fetchSurahsFromAPI");
     try {
       setLoading(true);
+      // const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
       const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
       const data = await response.json();
       data?.data.sort((a, b) => a.chapter - b.chapter);
@@ -145,6 +146,7 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       {open && renderModal()}
       <FlatList
+        showsVerticalScrollIndicator={false}
         data={surahs}
         keyExtractor={(item) => item.chapter.toString()}
         renderItem={renderSurahItem}

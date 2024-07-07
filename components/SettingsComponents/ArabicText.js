@@ -17,7 +17,8 @@ const ArabicText = () => {
     useEffect(() => {
       setLabel([])
       setLoading(true);
-      fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
+      // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
+      fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/arabicText")
         .then((response) => response.json())
         .then((data) => {
           // console.log(data.data);

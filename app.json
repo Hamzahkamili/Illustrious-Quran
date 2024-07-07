@@ -3,28 +3,35 @@
     "name": "Quran",
     "slug": "Quran",
     "version": "1.0.0",
-    "orientation": "landscapes",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "e7ded0"
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hasaanqari9.Quran"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "e7ded0"
-      }
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.hasaanqari9.Quran"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b3000d2b-b33c-46b1-965d-76b9e0b5932a"
+      }
     }
   }
 }
