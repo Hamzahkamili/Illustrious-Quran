@@ -18,7 +18,8 @@ const Translation = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/languages")
+        // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/languages")
+        fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/languages")
           .then((response) => response.json())
           .then((data) => {
             // console.log(data);

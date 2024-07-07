@@ -16,7 +16,7 @@ const Verses = ({ route }) => {
   const [verses, setVerses] = useState([]);
   const [translations, setTranslations] = useState([]);
   const [audios, setAudios] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState(new Audio.Sound());
 
@@ -132,10 +132,8 @@ const Verses = ({ route }) => {
   useEffect(() => {
     const initialize = async () => {
       const db = await initDB(surah.name);
-      setLoading(true);
 
       try {
-
         const surahVerses = await fetchSurahVerses(db);
         const translations = await fetchTranslations(db);
 
@@ -143,6 +141,7 @@ const Verses = ({ route }) => {
           setVerses(surahVerses);
           setTranslations(translations);
         } else {
+          setLoading(true);
           const surahData = await fetchSurahData();
           await insertSurah(db, surahData);
 
