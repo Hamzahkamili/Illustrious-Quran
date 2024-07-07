@@ -30,21 +30,24 @@ const HomeScreen = ({ navigation }) => {
 
   const insertSurahs = async (db, surahs) => {
     await db.execAsync('DELETE FROM surahs');
-    for (const surah of surahs) {
-      await db.runAsync(
+    const insertPromises = surahs.map(surah =>
+      db.runAsync(
         `INSERT INTO surahs (chapter, totalVerses, name, nameTranslation, arabicName, revelationPlace, revelationOrder, summarySource, summaryText) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        surah.chapter,
-        surah.totalVerses,
-        surah.name,
-        surah.nameTranslation,
-        surah.arabicName,
-        surah.revelationPlace,
-        surah.revelationOrder,
-        surah.summary?.source,
-        surah.summary?.text
-      );
-    }
+        [
+          surah.chapter,
+          surah.totalVerses,
+          surah.name,
+          surah.nameTranslation,
+          surah.arabicName,
+          surah.revelationPlace,
+          surah.revelationOrder,
+          surah.summary?.source,
+          surah.summary?.text
+        ]
+      )
+    );
+    await Promise.all(insertPromises);
   };
 
   const fetchSurahsFromDB = async (db) => {
@@ -62,27 +65,38 @@ const HomeScreen = ({ navigation }) => {
         text: item.summaryText
       }
     }));
-    setSurahs(dbSurahs);
+    // setSurahs(dbSurahs);
+    return dbSurahs;
+  };
+
+  const fetchSurahsFromAPI = async () => {
+    console.log("fetchSurahsFromAPI");
+    try {
+      setLoading(true);
+      const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
+      const data = await response.json();
+      data?.data.sort((a, b) => a.chapter - b.chapter);
+      // console.log(data?.data);
+      return data?.data;
+    } catch (error) {
+      console.error("Error fetching Quran surah names:", error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     const initialize = async () => {
       const db = await initDB();
-      
-      try {
-        if (surahs.length < 0) {
-          setLoading(true);
-          const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
-          const data = await response.json();
-          data?.data.sort((a, b) => a.chapter - b.chapter);
-          setSurahs(data?.data);
-          await insertSurahs(db, data?.data);
-        }
-      } catch (error) {
-        console.error("Error fetching Quran surah names:", error);
-      } finally {
-        await fetchSurahsFromDB(db);
-        setLoading(false);
+
+      const surahfromdb = await fetchSurahsFromDB(db);
+      setSurahs(surahfromdb);
+      // console.log(surahfromdb);
+      if (surahfromdb.length === 0) {
+        const apiSurahs = await fetchSurahsFromAPI();
+        setSurahs(apiSurahs);
+        await insertSurahs(db, apiSurahs);
       }
     };
 
@@ -93,57 +107,47 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('Verses', { surah });
   };
 
-  if (loading) {
-    return (
-        <View style={styles.modelContainer}>
-          <View>
-            <Text style={styles.title}>Illustrious Quran</Text>
-            <Text style={styles.subtitle}>Learn quran and</Text>
-            <Text style={styles.subtitle}>recite once everyday</Text>
+  const renderSurahItem = ({ item }) => (
+    <Pressable onPress={() => handleSurahPress(item)}>
+      <View style={styles.surahContainer}>
+        <View style={styles.innerContainer}>
+          <View style={styles.numberContainer}>
+            <Text style={styles.surahItem}>{item.chapter}</Text>
           </View>
-          <View style={{ alignItems: 'center' }}>
-            <Image source={mosque} />
+          <View>
+            <Text style={styles.surahItem}>{item.name}</Text>
+            <Text style={styles.surahDescription}>{item.totalVerses} Verses | {item.revelationPlace}</Text>
           </View>
         </View>
-    );
-  }
+        <Text style={styles.surahItem}>{item.arabicName}</Text>
+      </View>
+    </Pressable>
+  );
+
+  const renderModal = () => (
+    <Modal visible={open} animationType="none">
+      <View style={styles.modelContainer}>
+        <View>
+          <Text style={styles.title}>Illustrious Quran</Text>
+          <Text style={styles.subtitle}>Learn Quran and recite once everyday</Text>
+        </View>
+        <View style={{ alignItems: 'center', marginVertical: 25 }}>
+          <Image source={mosque} />
+        </View>
+        {loading ? <ActivityIndicator size="large" color="#795547" /> : <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
+            <Text style={styles.buttonText}>Get Started</Text>
+        </TouchableOpacity>}
+      </View>
+    </Modal>
+  );
 
   return (
     <View style={styles.container}>
-      <Modal visible={open} animationType="none">
-        <View style={styles.modelContainer}>
-          <View>
-            <Text style={styles.title}>Illustrious Quran</Text>
-            <Text style={styles.subtitle}>Learn quran and</Text>
-            <Text style={styles.subtitle}>recite once everyday</Text>
-          </View>
-          <View style={{ alignItems: 'center' }}>
-            <Image source={mosque} />
-            <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
-              <Text style={styles.buttonText}>Get Started</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {open && renderModal()}
       <FlatList
         data={surahs}
         keyExtractor={(item) => item.chapter.toString()}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => handleSurahPress(item)}>
-            <View style={styles.surahContainer}>
-              <View style={styles.innerContainer}>
-                <View style={styles.numberContainer}>
-                  <Text style={styles.surahItem}>{item.chapter}</Text>
-                </View>
-                <View>
-                  <Text style={styles.surahItem}>{item.name}</Text>
-                  <Text style={styles.surahDescription}>{item.totalVerses} Verses | {item.revelationPlace}</Text>
-                </View>
-              </View>
-              <Text style={styles.surahItem}>{item.arabicName}</Text>
-            </View>
-          </Pressable>
-        )}
+        renderItem={renderSurahItem}
       />
     </View>
   );
@@ -175,11 +179,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   container: {
     flex: 1,
@@ -215,7 +214,7 @@ const styles = StyleSheet.create({
   surahDescription: {
     color: '#D7A86E',
     fontSize: 12,
-  }
+  },
 });
 
 export default HomeScreen;

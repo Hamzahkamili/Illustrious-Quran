@@ -1,122 +1,198 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ImageBackground, TouchableOpacity } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av';
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useSelector } from "react-redux"
+import { useSelector } from "react-redux";
+import * as SQLite from 'expo-sqlite';
 
 import mosque from '../assets/mosque.png';
 
 const Verses = ({ route }) => {
-  const arabicText = useSelector((state) => state.settings.arabicText)
-  const language = useSelector((state) => state.settings.language)
-  const author = useSelector((state) => state.settings.author)
-  // console.log(arabicText, language, author);
-  
+  const arabicText = useSelector((state) => state.settings.arabicText);
+  const language = useSelector((state) => state.settings.language);
+  const author = useSelector((state) => state.settings.author);
   const { surah } = route.params;
-  // console.log(typeof(Number(surah.chapter)));
   const [verses, setVerses] = useState([]);
-  // const [translations, setTranslations] = useState([]);
+  const [translations, setTranslations] = useState([]);
   const [audios, setAudios] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const [soundObject, setSound] = useState( new Audio.Sound(""));
+  const [soundObject, setSound] = useState(new Audio.Sound());
 
-  useEffect(() => {
-    // Fetch surah information
-    setLoading(true);
-    const fetchSurahInfo = async () => {
-      if (surah) {
-        await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
-          .then((response) => response.json())
-          .then((data) => {
-            data?.data.sort((a, b) => a.verse - b.verse); 
-            setVerses(data?.data);
-          })
-          .catch((error) =>
-          console.error("Error fetching verses for surah:", error)
+  // console.log('Surah:', surah.name);
+
+  const initDB = async (surahName) => {
+    const db = await SQLite.openDatabaseAsync(`${surahName}.db`);
+    await db.execAsync(
+      `CREATE TABLE IF NOT EXISTS Surahs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chapter INTEGER,
+        verse INTEGER,
+        simple TEXT,
+        simpleClean TEXT,
+        simplePlain TEXT,
+        simpleMinimal TEXT,
+        uthmani TEXT,
+        uthmaniMinimal TEXT
+      );`
+    );
+    await db.execAsync(
+      `CREATE TABLE IF NOT EXISTS Translations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        surah_id INTEGER,
+        language TEXT,
+        author TEXT,
+        translation TEXT,
+        FOREIGN KEY (surah_id) REFERENCES Surahs(id)
+      );`
+    );
+    return db;
+  };
+
+  const insertSurah = async (db, surahVerses) => {
+    await db.execAsync('DELETE FROM Surahs');
+    await db.execAsync('DELETE FROM Translations');
+    try {
+      for (const surahVerse of surahVerses) {
+        const result = await db.runAsync(
+          `INSERT INTO Surahs (chapter, verse, simple, simpleClean, simplePlain, simpleMinimal, uthmani, uthmaniMinimal) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+          [
+            surahVerse.chapter,
+            surahVerse.verse,
+            surahVerse.text.simple,
+            surahVerse.text.simpleClean,
+            surahVerse.text.simplePlain,
+            surahVerse.text.simpleMinimal,
+            surahVerse.text.uthmani,
+            surahVerse.text.uthmaniMinimal
+          ]
+        );
+        const surahId = result.lastInsertRowId;
+        for (const translation of surahVerse.translations) {
+          await db.runAsync(
+            `INSERT INTO Translations (surah_id, language, author, translation) VALUES (?, ?, ?, ?);`,
+            [surahId, translation.language, translation.author, translation.translation]
           );
         }
-    };
-    
-    const fetchAudio = async () => {
+      }
+    } catch (error) {
+      console.error('Error inserting Surah and translations:', error);
+      throw error;
+    }
+  };
+
+  const fetchSurahVerses = async (db) => {
+    try {
+      const results = await db.getAllAsync(`SELECT * FROM Surahs`);
+      return results;
+    } catch (error) {
+      console.error('Error fetching Surah verses:', error);
+      throw error;
+    }
+  };
+
+  const fetchTranslations = async (db) => {
+    try {
+      const results = await db.getAllAsync(
+        `SELECT * FROM Translations WHERE author = ? AND language = ?`,
+        [author, language]
+      );
+      return results;
+    } catch (error) {
+      console.error('Error fetching translations:', error);
+      throw error;
+    }
+  };
+
+  const fetchSurahData = async () => {
+    try {
+      const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
+      const data = await response.json();
+      data?.data.sort((a, b) => a.verse - b.verse);
+      return data?.data;
+    } catch (error) {
+      console.error("Error fetching surah data:", error);
+      throw error;
+    }
+  };
+
+  const fetchAudioData = async () => {
+    try {
+      const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah.chapter}/ar.abdulbasitmurattal`);
+      const data = await response.json();
+      return data.data.ayahs;
+    } catch (error) {
+      console.error("Error fetching audio data:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      const db = await initDB(surah.name);
       setLoading(true);
-      await fetch(`https://api.alquran.cloud/v1/surah/${surah.chapter}/ar.abdulbasitmurattal`)
-        .then((response) => response.json())
-        .then((data) => {
-          setAudios(data.data.ayahs);
-        })
-        .catch((error) =>
-        console.error("Error fetching English translation:", error)
-        );
+
+      try {
+
+        const surahVerses = await fetchSurahVerses(db);
+        const translations = await fetchTranslations(db);
+
+        if (surahVerses.length > 0 && translations.length > 0) {
+          setVerses(surahVerses);
+          setTranslations(translations);
+        } else {
+          const surahData = await fetchSurahData();
+          await insertSurah(db, surahData);
+
+          const surahVerses = await fetchSurahVerses(db);
+          const translations = await fetchTranslations(db);
+          setVerses(surahVerses);
+          setTranslations(translations);
+        }
+
+        const audioData = await fetchAudioData();
+        setAudios(audioData);
+
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+
     };
-
-    // Call both functions
-    fetchSurahInfo();
-    // fetchEnglishTranslation();
-    fetchAudio();
-    setLoading(false);
-    // soundObject.loadAsync({uri:""})
-
+    initialize();
   }, [surah]);
 
-  if (loading || verses.length === 0 || audios.length === 0) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#795547" />
       </View>
     );
   }
-  if (!verses) {
-    return (
-      <View>
-        <Text>No verses found</Text>
-      </View>
-    );
-  }
-  // if (!translations) {
-  //   return (
-  //     <View>
-  //       <Text>No translations found</Text>
-  //     </View>
-  //   );
-  // }
 
-  // soundObject.loadAsync({uri:"https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3"})
-
-  async function audioLoadHandler(i) {
+  const audioLoadHandler = async (index) => {
     setPlaying(true);
     await soundObject.unloadAsync();
-    await soundObject.loadAsync({uri:audios[i].audio})
-    await audioHandler()
-    // console.log('playing', i);
-    // const url = audios[index].audio;
-    // await soundObject.loadAsync({uri:url})
-    // await audioHandler()
-    // soundObject.unloadAsync();
-  }
-  async function audioStopHandler() {
+    await soundObject.loadAsync({ uri: audios[index].audio });
+    await soundObject.playAsync();
+    soundObject.setOnPlaybackStatusUpdate(status => {
+      if (status.didJustFinish) {
+        setPlaying(false);
+      }
+    });
+  };
+
+  const audioStopHandler = async () => {
     setPlaying(false);
     await soundObject.stopAsync();
     await soundObject.unloadAsync();
-  }
-
-  async function audioHandler() {
-    // console.log('Audio play');
-    // const url = audios[index].audio;
-    // const { sound } = await Audio.Sound.createAsync({uri: url});
-    // await sound.playAsync();
-    try {
-      await soundObject.playAsync();
-    } catch (error) {
-      console.error("Error playing audio:", error);
-    }
-  }
+  };
 
   return (
-    <View  style={styles.background}>
+    <View style={styles.background}>
       <View style={styles.headingContainer}>
-        {/* <Image source={mosque}></Image> */}
         <View style={styles.heading}>
           <Text style={styles.title}>{surah.name}</Text>
           <Text>{surah.arabicName}</Text>
@@ -124,59 +200,43 @@ const Verses = ({ route }) => {
           <Text>Chapter: {surah.chapter}</Text>
           <Text>Verses: {surah.totalVerses}</Text>
         </View>
-        <View>
-          <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
-        </View>
+        <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
       </View>
-
-      {/* Display verses with translations */}
-      {verses.length > 0 && (
-        <FlatList
-          style={styles.verseContainer}
-          data={verses}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item, index }) => (
-            <View style={styles.verseRow}>
-               <View style={styles.controlsContainer}>
-                <View style={{flexDirection: 'row', gap: 10}}>
-                  {!playing ? (
-                    <TouchableOpacity onPress={audioLoadHandler.bind(this, index)}>
-                      <Ionicons name="play" size={24} color="#795547" />
-                    </TouchableOpacity>
-                    // <Button
-                    // onPress={audioLoadHandler.bind(this, index)}
-                    // title="Play"
-                    // color="#841584"
-                    // /> 
-                    ) : (
-                      <TouchableOpacity onPress={audioStopHandler}>
-                        <Ionicons name="pause" size={24} color="#795547" />
-                      </TouchableOpacity>
-                      // <Button
-                      // onPress={audioStopHandler}
-                      // title="Stop"
-                      // color="#841584"
-                      // /> 
-                    )
-                  }
-                  <TouchableOpacity onPress={(e) => console.log(e)}>
-                      <Ionicons name="bookmark" size={24} color="#795547" />
+      {surah.name !== 'Al-Fatihah' && <Text style={{textAlign: 'center', fontSize: 25}}>بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</Text>}
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        style={styles.verseContainer}
+        data={verses}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item, index }) => (
+          <View style={styles.verseRow}>
+            <View style={styles.controlsContainer}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {!playing ? (
+                  <TouchableOpacity onPress={() => audioLoadHandler(index)}>
+                    <Ionicons name="play" size={24} color="#795547" />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={(e) => console.log(e)}>
-                      <Ionicons name="share" size={24} color="#795547" />
+                ) : (
+                  <TouchableOpacity onPress={audioStopHandler}>
+                    <Ionicons name="pause" size={24} color="#795547" />
                   </TouchableOpacity>
-                </View>
-                <Text>{item.verse}</Text>
+                )}
+                <TouchableOpacity onPress={() => console.log('Bookmark pressed')}>
+                  <Ionicons name="bookmark" size={24} color="#795547" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => console.log('Share pressed')}>
+                  <Ionicons name="share" size={24} color="#795547" />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.verseText}>{item.data.text}</Text>
-              <Text style={styles.translationText}>{item.data.translation}</Text>
-              {/* {translations.length > 0 && (
-                <Text style={styles.translationText}>{`${translations[index]?.text}`}</Text>
-              )} */}
+              <Text>{item.verse}</Text>
             </View>
-          )}
-        />
-      )}
+            <Text style={styles.verseText}>{surah.name === 'Al-Fatihah' ? item[arabicText] : item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
+            {translations[index] && (
+              <Text style={styles.translationText}>{translations[index].translation}</Text>
+            )}
+          </View>
+        )}
+      />
     </View>
   );
 };
@@ -214,9 +274,6 @@ const styles = StyleSheet.create({
   verseContainer: {
     margin: 8,
     padding: 10,
-    paddingVertical: 30,
-    borderBottomWidth: 10,
-    borderBottomColor: "#fceddc",
   },
   verseRow: {
     flexDirection: 'column',
@@ -240,8 +297,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   translationText: {
-    marginTop: 25,
+    marginTop: 15,
     flex: 1,
+    marginBottom: 10,
   },
 });
 
