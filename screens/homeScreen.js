@@ -7,9 +7,12 @@ const HomeScreen = ({ navigation }) => {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(true);
+  const [allSurahsData, setAllSurahsData] = useState([])
 
   const initDB = async () => {
-    const db = await SQLite.openDatabaseAsync('surahs.db');
+    const db = await SQLite.openDatabaseAsync('surahs.db', {
+      useNewConnection: true
+    });
     await db.execAsync(`
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS surahs (
@@ -24,12 +27,17 @@ const HomeScreen = ({ navigation }) => {
         summarySource TEXT,
         summaryText TEXT
       );
+
+      CREATE TABLE IF NOT EXISTS surah_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data TEXT NOT NULL
+      );
     `);
     return db;
-  };
+  }
 
   const insertSurahs = async (db, surahs) => {
-    await db.execAsync('DELETE FROM surahs');
+    await db.execAsync('DELETE FROM surahs')
     const insertPromises = surahs.map(surah =>
       db.runAsync(
         `INSERT INTO surahs (chapter, totalVerses, name, nameTranslation, arabicName, revelationPlace, revelationOrder, summarySource, summaryText) 
@@ -46,9 +54,15 @@ const HomeScreen = ({ navigation }) => {
           surah.summary?.text
         ]
       )
-    );
+    )
     await Promise.all(insertPromises);
-  };
+  }
+
+  const saveAllSurahsDataToDB = async (db, allSurahsData) => {
+    const jsonString = JSON.stringify(allSurahsData);
+    await db.runAsync('DELETE FROM surah_data');
+    await db.runAsync('INSERT INTO surah_data (data) VALUES (?)', [jsonString]);
+  }
 
   const fetchSurahsFromDB = async (db) => {
     const allRows = await db.getAllAsync('SELECT * FROM surahs');
@@ -69,28 +83,57 @@ const HomeScreen = ({ navigation }) => {
     return dbSurahs;
   };
 
+  const fetchAllSurahsDataFromDB = async (db) => {
+    const allRows = await db.getAllAsync('SELECT data FROM surah_data LIMIT 1');
+    if (allRows.length > 0) {
+      const jsonString = allRows[0].data;
+      const parsedData = JSON.parse(jsonString);
+      return parsedData;
+    }
+    return [];
+  }
+
   const fetchSurahsFromAPI = async () => {
     console.log("fetchSurahsFromAPI");
     try {
-      setLoading(true);
       // const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
       const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
       const data = await response.json();
       data?.data.sort((a, b) => a.chapter - b.chapter);
-      // console.log(data?.data);
+      // console.log("Surahs: ", data?.data);
       return data?.data;
     } catch (error) {
       console.error("Error fetching Quran surah names:", error);
       return [];
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const fetchAllSurahsData = async () => {
+    console.log("Fetching all Surahs data");
+
+    const allSurahsData = [];
+
+    for (let chapter = 1; chapter <= 114; chapter++) {
+      try {
+        const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${chapter}`);
+        const data = await response.json();
+        if (data?.data) {
+          data.data.sort((a, b) => a.verse - b.verse);
+          console.log(`Chapter ${chapter}`);
+          allSurahsData.push({ chapter, verses: data.data });
+        }
+      } catch (error) {
+        console.error(`Error fetching data for chapter ${chapter}:`, error);
+      }
+    }
+    return allSurahsData;
   };
 
   useEffect(() => {
     const initialize = async () => {
       const db = await initDB();
 
+      setLoading(true);
       const surahfromdb = await fetchSurahsFromDB(db);
       setSurahs(surahfromdb);
       // console.log(surahfromdb);
@@ -99,13 +142,25 @@ const HomeScreen = ({ navigation }) => {
         setSurahs(apiSurahs);
         await insertSurahs(db, apiSurahs);
       }
-    };
 
+      const storedAllSurahsData = await fetchAllSurahsDataFromDB(db);
+      if (storedAllSurahsData.length > 0) {
+        setAllSurahsData(storedAllSurahsData);
+      } else {
+        const fetchedAllSurahsData = await fetchAllSurahsData();
+        setAllSurahsData(fetchedAllSurahsData);
+        await saveAllSurahsDataToDB(db, fetchedAllSurahsData);
+      }
+      setLoading(false);
+
+    }
     initialize();
   }, []);
 
   const handleSurahPress = (surah) => {
-    navigation.navigate('Verses', { surah });
+    // console.log(surah.chapter);
+    // console.log(allSurahsData[surah.chapter - 1]);
+    navigation.navigate('Verses', { surah, surahVerseData: allSurahsData[surah.chapter - 1] });
   };
 
   const renderSurahItem = ({ item }) => (
@@ -136,8 +191,9 @@ const HomeScreen = ({ navigation }) => {
           <Image source={mosque} />
         </View>
         {loading ? <ActivityIndicator size="large" color="#795547" /> : <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
-            <Text style={styles.buttonText}>Get Started</Text>
+          <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>}
+        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources. Plz wait for 5 min</Text>}
       </View>
     </Modal>
   );

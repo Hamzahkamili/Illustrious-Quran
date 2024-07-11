@@ -13,6 +13,7 @@ const Verses = ({ route }) => {
   const language = useSelector((state) => state.settings.language);
   const author = useSelector((state) => state.settings.author);
   const { surah } = route.params;
+  const { surahVerseData } = route.params;
   const [verses, setVerses] = useState([]);
   const [translations, setTranslations] = useState([]);
   const [audios, setAudios] = useState([]);
@@ -20,10 +21,13 @@ const Verses = ({ route }) => {
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState(new Audio.Sound());
 
-  // console.log('Surah:', surah.name);
+  // console.log("Surah: ", surah);
+  // console.log("SurahVerseData: ", surahVerseData.verses);
 
   const initDB = async (surahName) => {
-    const db = await SQLite.openDatabaseAsync(`${surahName}.db`);
+    const db = await SQLite.openDatabaseAsync(`${surahName}.db`, {
+      useNewConnection: true
+    });
     await db.execAsync(
       `CREATE TABLE IF NOT EXISTS Surahs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +55,7 @@ const Verses = ({ route }) => {
   };
 
   const insertSurah = async (db, surahVerses) => {
+    console.log('inserting surah');
     await db.execAsync('DELETE FROM Surahs');
     await db.execAsync('DELETE FROM Translations');
     try {
@@ -80,6 +85,8 @@ const Verses = ({ route }) => {
       console.error('Error inserting Surah and translations:', error);
       throw error;
     }
+    console.log('inserting surah finished');
+
   };
 
   const fetchSurahVerses = async (db) => {
@@ -106,11 +113,14 @@ const Verses = ({ route }) => {
   };
 
   const fetchSurahData = async () => {
+    console.log("fetchVerses&TranslationsFromApi");
+
     try {
       // const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
       const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${surah.chapter}`);
       const data = await response.json();
       data?.data.sort((a, b) => a.verse - b.verse);
+      // console.log("Verses&Translations: ", data?.data);
       return data?.data;
     } catch (error) {
       console.error("Error fetching surah data:", error);
@@ -119,9 +129,11 @@ const Verses = ({ route }) => {
   };
 
   const fetchAudioData = async () => {
+    console.log("fetchAudioDataFromApi");
     try {
       const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah.chapter}/ar.abdulbasitmurattal`);
       const data = await response.json();
+      // console.log("Audios: ", data?.data);
       return data.data.ayahs;
     } catch (error) {
       console.error("Error fetching audio data:", error);
@@ -130,10 +142,11 @@ const Verses = ({ route }) => {
   };
 
   useEffect(() => {
+    console.log('useEffect');
     const initialize = async () => {
-      const db = await initDB(surah.name);
 
       try {
+        const db = await initDB(surah.name);
         const surahVerses = await fetchSurahVerses(db);
         const translations = await fetchTranslations(db);
 
@@ -141,9 +154,11 @@ const Verses = ({ route }) => {
           setVerses(surahVerses);
           setTranslations(translations);
         } else {
-          setLoading(true);
-          const surahData = await fetchSurahData();
-          await insertSurah(db, surahData);
+          // setLoading(true);
+          setVerses(surahVerseData.verses);
+          
+          // const surahData = await fetchSurahData();
+          await insertSurah(db, surahVerseData.verses);
 
           const surahVerses = await fetchSurahVerses(db);
           const translations = await fetchTranslations(db);
@@ -202,12 +217,12 @@ const Verses = ({ route }) => {
         </View>
         <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
       </View>
-      {surah.name !== 'Al-Fatihah' && <Text style={{textAlign: 'center', fontSize: 25}}>بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</Text>}
+      {surah.name !== 'Al-Fatihah' && <Text style={{ textAlign: 'center', fontSize: 25 }}>بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</Text>}
       <FlatList
         showsVerticalScrollIndicator={false}
         style={styles.verseContainer}
         data={verses}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.verse}
         renderItem={({ item, index }) => (
           <View style={styles.verseRow}>
             <View style={styles.controlsContainer}>
@@ -230,7 +245,7 @@ const Verses = ({ route }) => {
               </View>
               <Text>{item.verse}</Text>
             </View>
-            <Text style={styles.verseText}>{surah.name === 'Al-Fatihah' ? item[arabicText] : item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
+            <Text style={styles.verseText}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
             {translations[index] && (
               <Text style={styles.translationText}>{translations[index].translation}</Text>
             )}
