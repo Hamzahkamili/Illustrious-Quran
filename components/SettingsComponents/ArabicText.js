@@ -7,40 +7,40 @@ import { useDispatch } from "react-redux"
 import { addArabicText } from '../../store/settingsSlice'
 import { ScrollView } from 'react-native-gesture-handler';
 
-const ArabicText = () => {
+const ArabicText = ({textStyle}) => {
     const dispatch = useDispatch();
     const [textModelOpen, settextModelOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [arabicText, setArabicText] = useState([])
-    const [label, setLabel] = useState([])
+    // const [loading, setLoading] = useState(false);
+    // const [arabicText, setArabicText] = useState([])
+    // const [label, setLabel] = useState([])
 
-    useEffect(() => {
-      setLabel([])
-      setLoading(true);
-      // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
-      fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/arabicText")
-        .then((response) => response.json())
-        .then((data) => {
-          // console.log(data.data);
-          setArabicText(data.data)
-          data.data.map((item) => {
-            setLabel(prev => [...prev, {label: item._id}])
-          })
-          setLoading(false);
-        })
-        .catch((error) =>
-          console.error("Error fetching Quran arabic text:", error)
-        );
-    setLoading(false);
-    }, []);
+    // useEffect(() => {
+    //   setLabel([])
+    //   setLoading(true);
+    //   // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
+    //   fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/arabicText")
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //       // console.log(data.data);
+    //       setArabicText(data.data)
+    //       data.data.map((item) => {
+    //         setLabel(prev => [...prev, {label: item._id}])
+    //       })
+    //       setLoading(false);
+    //     })
+    //     .catch((error) =>
+    //       console.error("Error fetching Quran arabic text:", error)
+    //     );
+    // setLoading(false);
+    // }, []);
 
-    if (loading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#795547" />
-        </View>
-      );
-    }
+    // if (loading) {
+    //   return (
+    //     <View style={styles.loadingContainer}>
+    //       <ActivityIndicator size="large" color="#795547" />
+    //     </View>
+    //   );
+    // }
 
     // console.log(label);
 
@@ -63,7 +63,7 @@ const ArabicText = () => {
   
           <ScrollView style={{padding: 20}}>
             <RadioButtonRN
-              data={label}
+              data={textStyle}
               selectedBtn={(e) => handleRadioClick(e)}
             />
           </ScrollView>

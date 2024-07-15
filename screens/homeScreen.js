@@ -6,6 +6,7 @@ import mosque from '../assets/mosque.png';
 const HomeScreen = ({ navigation }) => {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(0)
   const [open, setOpen] = useState(true);
   const [allSurahsData, setAllSurahsData] = useState([])
 
@@ -95,6 +96,7 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchSurahsFromAPI = async () => {
     console.log("fetchSurahsFromAPI");
+    setLoading(true);
     try {
       // const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
       const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
@@ -110,6 +112,7 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchAllSurahsData = async () => {
     console.log("Fetching all Surahs data");
+    setLoading(true);
 
     const allSurahsData = [];
 
@@ -125,6 +128,7 @@ const HomeScreen = ({ navigation }) => {
       } catch (error) {
         console.error(`Error fetching data for chapter ${chapter}:`, error);
       }
+      setLoadingStatus(parseInt(chapter / 114 * 100))
     }
     return allSurahsData;
   };
@@ -133,7 +137,7 @@ const HomeScreen = ({ navigation }) => {
     const initialize = async () => {
       const db = await initDB();
 
-      setLoading(true);
+      
       const surahfromdb = await fetchSurahsFromDB(db);
       setSurahs(surahfromdb);
       // console.log(surahfromdb);
@@ -193,7 +197,7 @@ const HomeScreen = ({ navigation }) => {
         {loading ? <ActivityIndicator size="large" color="#795547" /> : <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>}
-        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources. Plz wait for 5 min</Text>}
+        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources. {loadingStatus}% complete.</Text>}
       </View>
     </Modal>
   );

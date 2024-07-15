@@ -7,48 +7,49 @@ import { addAuthor, addLanguage } from '../../store/settingsSlice';
 import { useDispatch } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
 
-const Translation = () => {
+const Translation = ({languages, authors}) => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
-    const [authorsForLanguage, setAuthorsForLanguage] = useState([])
-    const [translationModel, setTranslationModel] = useState(false);
     const [authorLoading, setAuthorLoading] = useState(false);
-    const [languages, setLanguages] = useState([])
+    const [translationModel, setTranslationModel] = useState(false);
     const [label, setLabel] = useState([])
+    // const [languages, setLanguages] = useState()
+    // const [authors, setAuthors] = useState()
 
-    useEffect(() => {
-        setLoading(true);
-        // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/languages")
-        fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/languages")
-          .then((response) => response.json())
-          .then((data) => {
-            // console.log(data);
-            setLanguages(data.data)
-            setLoading(false);
-          })
-          .catch((error) =>
-            console.error("Error fetching Quran translation availible languages:", error)
-          );
-    }, []);
+    // useEffect(() => {
+    //     setLoading(true);
+    //     // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/languages")
+    //     fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/languages")
+    //       .then((response) => response.json())
+    //       .then((data) => {
+    //         // console.log(data);
+    //         setLanguages(data.data)
+    //         setLoading(false);
+    //       })
+    //       .catch((error) =>
+    //         console.error("Error fetching Quran translation availible languages:", error)
+    //       );
+    // }, []);
 
     function handleTranslationPress(translation) {
         setLabel([])
         dispatch(addLanguage({id: translation}))
-        setAuthorLoading(true);
+        setLabel(authors[translation])
+        // setAuthorLoading(true);
         // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/authorsForLanguage?language="+translation)
-        fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/authorsForLanguage?language="+translation)
-          .then((response) => response.json())
-          .then((data) => {
-            // console.log(data.data);
-            setAuthorsForLanguage(data.data)
-            data.data.map((item) => {
-              setLabel(prev => [...prev, {label: item._id}])
-            })
-            setAuthorLoading(false)
-          })
-          .catch((error) =>
-            console.error("Error fetching Quran surah names:", error)
-          );
+        // fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/authorsForLanguage?language="+translation)
+        //   .then((response) => response.json())
+        //   .then((data) => {
+        //     console.log(data.data);
+        //     setAuthorsForLanguage(data.data)
+        //     data.data.map((item) => {
+        //       setLabel(prev => [...prev, {label: item._id}])
+        //     })
+        //     setAuthorLoading(false)
+        //   })
+        //   .catch((error) =>
+        //     console.error("Error fetching Quran surah names:", error)
+        //   );
         setTranslationModel(true);
     }
 
