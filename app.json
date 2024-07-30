@@ -4,10 +4,10 @@
     "slug": "Quran",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/illustrious_Quran_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/illustrious_Quran_splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/illustrious_Quran_adaptiveicon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.hasaanqari9.Quran"

@@ -1,129 +1,149 @@
-import React from 'react'
-import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Modal } from 'react-native'
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import RadioButtonRN from 'radio-buttons-react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { addAuthor, addLanguage } from '../../store/settingsSlice';
 import { useDispatch } from 'react-redux';
-import { ScrollView } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
 
-const Translation = ({languages, authors}) => {
-    const dispatch = useDispatch();
-    const [loading, setLoading] = useState(false);
-    const [authorLoading, setAuthorLoading] = useState(false);
-    const [translationModel, setTranslationModel] = useState(false);
-    const [label, setLabel] = useState([])
-    // const [languages, setLanguages] = useState()
-    // const [authors, setAuthors] = useState()
+const Translation = ({ languages, authors }) => {
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
+  const [authorLoading, setAuthorLoading] = useState(false);
+  const [translationModel, setTranslationModel] = useState(false);
+  const [label, setLabel] = useState([]);
 
-    // useEffect(() => {
-    //     setLoading(true);
-    //     // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/languages")
-    //     fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/languages")
-    //       .then((response) => response.json())
-    //       .then((data) => {
-    //         // console.log(data);
-    //         setLanguages(data.data)
-    //         setLoading(false);
-    //       })
-    //       .catch((error) =>
-    //         console.error("Error fetching Quran translation availible languages:", error)
-    //       );
-    // }, []);
-
-    function handleTranslationPress(translation) {
-        setLabel([])
-        dispatch(addLanguage({id: translation}))
-        setLabel(authors[translation])
-        // setAuthorLoading(true);
-        // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/authorsForLanguage?language="+translation)
-        // fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/authorsForLanguage?language="+translation)
-        //   .then((response) => response.json())
-        //   .then((data) => {
-        //     console.log(data.data);
-        //     setAuthorsForLanguage(data.data)
-        //     data.data.map((item) => {
-        //       setLabel(prev => [...prev, {label: item._id}])
-        //     })
-        //     setAuthorLoading(false)
-        //   })
-        //   .catch((error) =>
-        //     console.error("Error fetching Quran surah names:", error)
-        //   );
-        setTranslationModel(true);
+  async function handleTranslationPress(translation) {
+    if (translation === 'km') {
+      navigation.navigate('PdfViewer', { languagePdf: 'kashmiri' });
     }
-
-    if (loading) {
-        return (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#795547" />
-          </View>
-        );
+    else if (translation === 'gj') {
+      navigation.navigate('PdfViewer', { languagePdf: 'gojri' });
+    } else {
+      setLabel([]);
+      dispatch(addLanguage({ id: translation }));
+      setLabel(authors[translation]);
+      setTranslationModel(true);
     }
+  }
 
-    function handleRadioClick(e) {
-      // console.log(e);
-      dispatch(addAuthor({id: e.label}))
-      setTranslationModel(false)
-    }
+  function handleRadioClick(e) {
+    dispatch(addAuthor({ id: e.label }));
+    setTranslationModel(false);
+  }
 
-    return <>
-      <View style={{marginVertical: 15}}>
-        <Text>Translations: </Text>
-        <FlatList
-          data={languages}
-          renderItem={({item}) => {
-            return <TouchableOpacity onPress={(e) => handleTranslationPress(item._id)} style={[styles.modelButton, {marginVertical: 5}]}>
-              <Text style={styles.text}>
-                {item._id === 'hi' ? 'Hindi' : item._id === 'ur' ? 'Urdu' : item._id === 'en' ? 'English' : item._id === 'fr' ? 'Farsi' : 'Unknown'}
-              </Text>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#333" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={languages}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            onPress={() => handleTranslationPress(item._id)} 
+            style={styles.modelButton}
+          >
+            <Text style={styles.text}>
+              {item._id === 'hi' ? 'Hindi' : item._id === 'ur' ? 'Urdu' : item._id === 'en' ? 'English' : item._id === 'fr' ? 'Farsi' : item._id === 'km' ? 'Kashmiri' : item._id === 'gj' ? 'Gojri'  : 'Unknown'}
+            </Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item._id}
+        numColumns={2} // Adjust to display items in 2 columns
+        columnWrapperStyle={styles.row} // Add space between columns
+      />
+
+      <Modal visible={translationModel} animationType="slide" presentationStyle="pageSheet">
+        {!authorLoading ? (
+          <>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={() => setTranslationModel(false)}
+            >
+              <Ionicons name="close-sharp" size={24} color="#333" />
             </TouchableOpacity>
-          }}
-        />
-        <Modal visible={translationModel} animationType='slide' presentationStyle='pageSheet'>
-          {!authorLoading ? <>
-            <TouchableOpacity style={{marginTop: 15, marginLeft: 380}} onPress={(e) => setTranslationModel(false)}>
-              <Ionicons name="close-sharp" size={25} color="#795547" />
-            </TouchableOpacity>
-            <ScrollView style={{padding: 20}}>
-              {/* <FlatList
-                data={authorsForLanguage}
-                renderItem={({item}) => {
-                  return <TouchableOpacity style={[styles.modelButton, {marginVertical: 5}]}><Text>{item._id}</Text></TouchableOpacity>
-                }}
-              /> */}
+            <ScrollView style={styles.modalContent}>
               <RadioButtonRN
                 data={label}
                 selectedBtn={(e) => handleRadioClick(e)}
+                boxStyle={styles.radioBox}
+                textStyle={styles.radioText}
               />
             </ScrollView>
-            </> : (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#795547" />
-            </View>
-          )}
-        </Modal>
-      </View>
-    </>
+          </>
+        ) : (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#333" />
+          </View>
+        )}
+      </Modal>
+    </View>
+  );
 }
 
-export default Translation
+export default Translation;
 
 const styles = StyleSheet.create({
-    modelButton: {
-      borderWidth: 3,
-      borderColor: '#D7A86E',
-      paddingHorizontal: 15,
-      paddingVertical: 15,
-      borderRadius: 5,
-    },
-    text: {
-      color: '#795547',
-      fontSize: 18,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }
-  })
+  container: {
+    marginVertical: 15,
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#333',
+  },
+  modelButton: {
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    margin: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: 'transparent',
+    flex: 1, // Make the button take up available space
+  },
+  text: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    marginTop: 15,
+    marginRight: 15,
+    alignSelf: 'flex-end',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  row: {
+    justifyContent: 'space-between', // Add space between columns
+  },
+  radioBox: {
+    borderWidth: 0,
+    borderRadius: 8,
+    marginVertical: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#F0F0F0',
+  },
+  radioText: {
+    fontSize: 16,
+    color: '#333',
+  },
+});

@@ -1,90 +1,90 @@
-import React, { useEffect, useState } from 'react'
-
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native'
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import RadioButtonRN from 'radio-buttons-react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useDispatch } from "react-redux"
-import { addArabicText } from '../../store/settingsSlice'
-import { ScrollView } from 'react-native-gesture-handler';
+import { useDispatch } from "react-redux";
+import { addArabicText } from '../../store/settingsSlice';
 
-const ArabicText = ({textStyle}) => {
-    const dispatch = useDispatch();
-    const [textModelOpen, settextModelOpen] = useState(false);
-    // const [loading, setLoading] = useState(false);
-    // const [arabicText, setArabicText] = useState([])
-    // const [label, setLabel] = useState([])
+const ArabicText = ({ textStyle }) => {
+  const dispatch = useDispatch();
+  const [textModelOpen, setTextModelOpen] = useState(false);
 
-    // useEffect(() => {
-    //   setLabel([])
-    //   setLoading(true);
-    //   // fetch("http://192.168.29.253:3000/v1/scripture/quraan/info/arabicText")
-    //   fetch("https://illustriousquran-backend.onrender.com/v1/scripture/quraan/info/arabicText")
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       // console.log(data.data);
-    //       setArabicText(data.data)
-    //       data.data.map((item) => {
-    //         setLabel(prev => [...prev, {label: item._id}])
-    //       })
-    //       setLoading(false);
-    //     })
-    //     .catch((error) =>
-    //       console.error("Error fetching Quran arabic text:", error)
-    //     );
-    // setLoading(false);
-    // }, []);
+  function handleRadioClick(e) {
+    dispatch(addArabicText({ id: e.label }));
+    setTextModelOpen(false);
+  }
 
-    // if (loading) {
-    //   return (
-    //     <View style={styles.loadingContainer}>
-    //       <ActivityIndicator size="large" color="#795547" />
-    //     </View>
-    //   );
-    // }
-
-    // console.log(label);
-
-    function handleRadioClick(e) {
-      // console.log(e);
-      dispatch(addArabicText({id: e.label}))
-      settextModelOpen(false)
-    }
-
-    return <>
-      <View style={{marginVertical: 5}}>
-        <Text>Styles:</Text> 
-        <TouchableOpacity style={styles.modelButton} onPress={(e) => settextModelOpen(true)}>
-          <Text style={styles.text}>Arabic Text Style</Text> 
-        </TouchableOpacity>
-        <Modal visible={textModelOpen} animationType='slide' presentationStyle='pageSheet'>
-          <TouchableOpacity style={{marginTop: 15, marginLeft: 380}} onPress={(e) => settextModelOpen(false)}>
-            <Ionicons name="close-sharp" size={25} color="#795547" />
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.modelButton} onPress={() => setTextModelOpen(true)}>
+        <Text style={styles.text}>Arabic Text Styles</Text>
+      </TouchableOpacity>
+      <Modal visible={textModelOpen} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setTextModelOpen(false)}>
+            <Ionicons name="close-sharp" size={24} color="#333" />
           </TouchableOpacity>
-  
-          <ScrollView style={{padding: 20}}>
-            <RadioButtonRN
-              data={textStyle}
-              selectedBtn={(e) => handleRadioClick(e)}
-            />
-          </ScrollView>
-        </Modal>
-      </View>
-    </>
+        </View>
+        <ScrollView style={styles.modalContent}>
+          <RadioButtonRN
+            data={textStyle}
+            selectedBtn={(e) => handleRadioClick(e)}
+            boxStyle={styles.radioBox}
+            textStyle={styles.radioText}
+          />
+        </ScrollView>
+      </Modal>
+    </View>
+  );
 }
 
-export default ArabicText
+export default ArabicText;
 
 const styles = StyleSheet.create({
-    modelButton: {
-      borderWidth: 3,
-      borderColor: '#D7A86E',
-      paddingHorizontal: 15,
-      paddingVertical: 15,
-      borderRadius: 5,
-      marginTop: 5,
-    },
-    text: {
-      color: '#795547',
-      fontSize: 18,
-    },
-})
+  container: {
+    
+  },
+  header: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  modelButton: {
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: 'transparent',
+  },
+  text: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '500'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 15,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  radioBox: {
+    borderWidth: 0,
+    borderRadius: 8,
+    marginVertical: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#F0F0F0',
+  },
+  radioText: {
+    fontSize: 16,
+    color: '#333',
+  },
+});

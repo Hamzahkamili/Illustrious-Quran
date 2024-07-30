@@ -6,6 +6,7 @@ const settingsSlice = createSlice({
         arabicText: "simple",
         language: "en",
         author: "Ahmed Ali",
+        fontSize: 18,
     },
     reducers: {
         addArabicText: (state, action) => {
@@ -17,11 +18,15 @@ const settingsSlice = createSlice({
         addAuthor: (state, action) => {
             state.author = action.payload.id;
         },
+        addFontSize: (state, action) => {
+            state.fontSize = action.payload.id;
+        }
     }
 })
 
 export const addArabicText =  settingsSlice.actions.addArabicText
 export const addLanguage = settingsSlice.actions.addLanguage
 export const addAuthor = settingsSlice.actions.addAuthor
+export const addFontSize = settingsSlice.actions.addFontSize
 
 export default settingsSlice.reducer

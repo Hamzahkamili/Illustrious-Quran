@@ -4,6 +4,7 @@ import * as SQLite from 'expo-sqlite';
 import mosque from '../assets/mosque.png';
 
 const HomeScreen = ({ navigation }) => {
+
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(0)
@@ -176,7 +177,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
           <View>
             <Text style={styles.surahItem}>{item.name}</Text>
-            <Text style={styles.surahDescription}>{item.totalVerses} Verses | {item.revelationPlace}</Text>
+            <Text style={styles.surahDescription}>{item.totalVerses} Verses</Text>
           </View>
         </View>
         <Text style={styles.surahItem}>{item.arabicName}</Text>
@@ -188,7 +189,7 @@ const HomeScreen = ({ navigation }) => {
     <Modal visible={open} animationType="none">
       <View style={styles.modelContainer}>
         <View>
-          <Text style={styles.title}>Illustrious Quran</Text>
+          <Text style={styles.title}>illustrious Quran</Text>
           <Text style={styles.subtitle}>Learn Quran and recite once everyday</Text>
         </View>
         <View style={{ alignItems: 'center', marginVertical: 25 }}>
@@ -269,8 +270,6 @@ const styles = StyleSheet.create({
   },
   surahItem: {
     paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#fceddc",
     color: '#795547',
   },
   surahDescription: {

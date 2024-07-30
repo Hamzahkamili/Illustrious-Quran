@@ -12,6 +12,8 @@ const Verses = ({ route }) => {
   const arabicText = useSelector((state) => state.settings.arabicText);
   const language = useSelector((state) => state.settings.language);
   const author = useSelector((state) => state.settings.author);
+  const fontSize = useSelector(state => state.settings.fontSize);
+
   const { surah } = route.params;
   const { surahVerseData } = route.params;
   const [verses, setVerses] = useState([]);
@@ -20,6 +22,12 @@ const Verses = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState(new Audio.Sound());
+
+  
+
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
 
   // console.log("Surah: ", surah);
   // console.log("SurahVerseData: ", surahVerseData.verses);
@@ -208,14 +216,20 @@ const Verses = ({ route }) => {
   return (
     <View style={styles.background}>
       <View style={styles.headingContainer}>
+        
         <View style={styles.heading}>
           <Text style={styles.title}>{surah.name}</Text>
-          <Text>{surah.arabicName}</Text>
-          <Text>Revelation: {surah.revelationPlace}</Text>
           <Text>Chapter: {surah.chapter}</Text>
-          <Text>Verses: {surah.totalVerses}</Text>
+          <Text style={{marginBottom: 5}}>Verses: {surah.totalVerses}</Text>
+          <Text>Revelation Place : </Text>
+          <Text>{capitalizeFirstLetter(surah.revelationPlace)}</Text>
         </View>
-        <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
+
+        <View>
+          <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
+        </View>
+
+        <Text style={{textAlign: 'right', paddingTop: 5, fontSize: 24}}>{surah.arabicName}</Text>
       </View>
       {surah.name !== 'Al-Fatihah' && <Text style={{ textAlign: 'center', fontSize: 25 }}>بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</Text>}
       <FlatList
@@ -236,19 +250,21 @@ const Verses = ({ route }) => {
                     <Ionicons name="pause" size={24} color="#795547" />
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity onPress={() => console.log('Bookmark pressed')}>
+                {/* <TouchableOpacity onPress={() => console.log('Bookmark pressed')}>
                   <Ionicons name="bookmark" size={24} color="#795547" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => console.log('Share pressed')}>
                   <Ionicons name="share" size={24} color="#795547" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
               <Text>{item.verse}</Text>
             </View>
-            <Text style={styles.verseText}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
+            <View style={{paddingVertical: 10}}>
+            <Text style={[styles.verseText, {fontSize: fontSize + 5}]}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
             {translations[index] && (
-              <Text style={styles.translationText}>{translations[index].translation}</Text>
+              <Text style={[styles.translationText, {fontSize}]}>{translations[index].translation}</Text>
             )}
+            </View>
           </View>
         )}
       />
@@ -307,14 +323,14 @@ const styles = StyleSheet.create({
   },
   verseText: {
     textAlign: 'right',
-    lineHeight: 35,
-    fontSize: 20,
     flex: 1,
+    fontWeight: 'bold'
   },
   translationText: {
     marginTop: 15,
     flex: 1,
     marginBottom: 10,
+    fontStyle: 'italic'
   },
 });
 

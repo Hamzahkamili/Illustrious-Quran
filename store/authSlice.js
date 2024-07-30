@@ -6,7 +6,7 @@ const authSlice = createSlice({
     initialState: {
         user: '',
         token: '',
-        isAthenticated: false
+        isAuthenticated: false
     },
     reducers: {
         addUserToken: (state, action) => {
@@ -14,13 +14,13 @@ const authSlice = createSlice({
             console.log(action.payload.token);
             state.token = action.payload.token
             state.user = action.payload.user
-            state.isAthenticated = true
+            state.isAuthenticated = true
             AsyncStorage.setItem('user', JSON.stringify(action.payload.user))
             AsyncStorage.setItem('token', action.payload.token)
         },
         logout: (state, action) => {
             state.token = null;
-            state.isAthenticated = false
+            state.isAuthenticated = false
             AsyncStorage.removeItem('token')
         },
     }
