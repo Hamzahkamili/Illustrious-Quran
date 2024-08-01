@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white'
   },
   profileContainer: {
     alignItems: 'center',
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#795547',
+    backgroundColor: '#3B1A74',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,

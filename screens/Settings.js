@@ -61,9 +61,9 @@ const Settings = () => {
                 step={1}
                 value={fontSize}
                 onValueChange={handleSliderChange}
-                minimumTrackTintColor="#1FB28A"
+                minimumTrackTintColor="#3B1A74"
                 maximumTrackTintColor="#d3d3d3"
-                thumbTintColor="#1FB28A"
+                thumbTintColor="#3B1A74"
               />
             </View>
           </View>
@@ -87,7 +87,8 @@ const Settings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 15,
+    padding: 15,
+    backgroundColor: 'white'
   },
   row1: {
     flexDirection: 'row',

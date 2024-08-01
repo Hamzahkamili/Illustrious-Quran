@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ImageBackground, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useSelector } from "react-redux";
-import * as SQLite from 'expo-sqlite';
+// import * as SQLite from 'expo-sqlite';
+// import { LinearGradient } from 'expo-linear-gradient';
 
 import mosque from '../assets/mosque.png';
+import axios from 'axios';
 
-const Verses = ({ route }) => {
+const Verses = ({ route, navigation }) => {
   const arabicText = useSelector((state) => state.settings.arabicText);
   const language = useSelector((state) => state.settings.language);
   const author = useSelector((state) => state.settings.author);
@@ -16,14 +18,70 @@ const Verses = ({ route }) => {
 
   const { surah } = route.params;
   const { surahVerseData } = route.params;
-  const [verses, setVerses] = useState([]);
-  const [translations, setTranslations] = useState([]);
+  // const [verses, setVerses] = useState([]);
+  const [translationsArray, setTranslationsArray] = useState([]);
   const [audios, setAudios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [soundObject, setSound] = useState(new Audio.Sound());
-
+  const [summary, setSummary] = useState('')
+  const [summarizeLoading, setSummarizeLoading] = useState(false);
   
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // console.log(surahVerseData.verses[0].translations);
+  // console.log(author);
+  // console.log(language);
+  
+  async function handleSummarization() {
+    console.log('Summarizing: ', concatenatedTranslations);
+    setSummarizeLoading(true);
+   
+    console.log('Starting to summarize');
+    const concatenatedTranslations = translationsArray.map(trans => trans.translation).join(' ');
+
+    console.log(surah.name);
+    console.log(concatenatedTranslations);
+    if (concatenatedTranslations !== '') {
+
+    try {
+      const response = await axios.post(
+        "https://illustriousquran-backend.onrender.com/summarize", // Replace with your backend URL
+        {
+          surahName: surah.name,
+          text: concatenatedTranslations,
+          language: language,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      // console.log(response.data.summary);
+      setSummary(response.data.summary);
+      setModalVisible(true)
+    } catch (error) {
+      console.error("Error fetching summary:", error);
+      Alert.alert("Model Overloaded !", "Please try again later", [{ text: "Okay" }]);
+    } finally {
+      setSummarizeLoading(false);
+    }
+    } 
+  }
+
+  useEffect(() => {
+  //   console.log('useEffect1');
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleSummarization} style={styles.summarizeButton}>
+        <Text style={styles.summarizeButtonText}>
+          {!summarizeLoading ? <Ionicons name="reader-sharp" color='#5523A2' size={25}></Ionicons> : <Ionicons name="reader-sharp" color='#5523A2' size={25}></Ionicons>}
+        </Text>
+      </TouchableOpacity>
+      ),
+    })
+  })
 
   function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -32,93 +90,93 @@ const Verses = ({ route }) => {
   // console.log("Surah: ", surah);
   // console.log("SurahVerseData: ", surahVerseData.verses);
 
-  const initDB = async (surahName) => {
-    const db = await SQLite.openDatabaseAsync(`${surahName}.db`, {
-      useNewConnection: true
-    });
-    await db.execAsync(
-      `CREATE TABLE IF NOT EXISTS Surahs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        chapter INTEGER,
-        verse INTEGER,
-        simple TEXT,
-        simpleClean TEXT,
-        simplePlain TEXT,
-        simpleMinimal TEXT,
-        uthmani TEXT,
-        uthmaniMinimal TEXT
-      );`
-    );
-    await db.execAsync(
-      `CREATE TABLE IF NOT EXISTS Translations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        surah_id INTEGER,
-        language TEXT,
-        author TEXT,
-        translation TEXT,
-        FOREIGN KEY (surah_id) REFERENCES Surahs(id)
-      );`
-    );
-    return db;
-  };
+  // const initDB = async (surahName) => {
+  //   const db = await SQLite.openDatabaseAsync(`${surahName}.db`, {
+  //     useNewConnection: true
+  //   });
+  //   await db.execAsync(
+  //     `CREATE TABLE IF NOT EXISTS Surahs (
+  //       id INTEGER PRIMARY KEY AUTOINCREMENT,
+  //       chapter INTEGER,
+  //       verse INTEGER,
+  //       simple TEXT,
+  //       simpleClean TEXT,
+  //       simplePlain TEXT,
+  //       simpleMinimal TEXT,
+  //       uthmani TEXT,
+  //       uthmaniMinimal TEXT
+  //     );`
+  //   );
+  //   await db.execAsync(
+  //     `CREATE TABLE IF NOT EXISTS Translations (
+  //       id INTEGER PRIMARY KEY AUTOINCREMENT,
+  //       surah_id INTEGER,
+  //       language TEXT,
+  //       author TEXT,
+  //       translation TEXT,
+  //       FOREIGN KEY (surah_id) REFERENCES Surahs(id)
+  //     );`
+  //   );
+  //   return db;
+  // };
 
-  const insertSurah = async (db, surahVerses) => {
-    console.log('inserting surah');
-    await db.execAsync('DELETE FROM Surahs');
-    await db.execAsync('DELETE FROM Translations');
-    try {
-      for (const surahVerse of surahVerses) {
-        const result = await db.runAsync(
-          `INSERT INTO Surahs (chapter, verse, simple, simpleClean, simplePlain, simpleMinimal, uthmani, uthmaniMinimal) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-          [
-            surahVerse.chapter,
-            surahVerse.verse,
-            surahVerse.text.simple,
-            surahVerse.text.simpleClean,
-            surahVerse.text.simplePlain,
-            surahVerse.text.simpleMinimal,
-            surahVerse.text.uthmani,
-            surahVerse.text.uthmaniMinimal
-          ]
-        );
-        const surahId = result.lastInsertRowId;
-        for (const translation of surahVerse.translations) {
-          await db.runAsync(
-            `INSERT INTO Translations (surah_id, language, author, translation) VALUES (?, ?, ?, ?);`,
-            [surahId, translation.language, translation.author, translation.translation]
-          );
-        }
-      }
-    } catch (error) {
-      console.error('Error inserting Surah and translations:', error);
-      throw error;
-    }
-    console.log('inserting surah finished');
+  // const insertSurah = async (db, surahVerses) => {
+  //   console.log('inserting surah');
+  //   await db.execAsync('DELETE FROM Surahs');
+  //   await db.execAsync('DELETE FROM Translations');
+  //   try {
+  //     for (const surahVerse of surahVerses) {
+  //       const result = await db.runAsync(
+  //         `INSERT INTO Surahs (chapter, verse, simple, simpleClean, simplePlain, simpleMinimal, uthmani, uthmaniMinimal) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+  //         [
+  //           surahVerse.chapter,
+  //           surahVerse.verse,
+  //           surahVerse.text.simple,
+  //           surahVerse.text.simpleClean,
+  //           surahVerse.text.simplePlain,
+  //           surahVerse.text.simpleMinimal,
+  //           surahVerse.text.uthmani,
+  //           surahVerse.text.uthmaniMinimal
+  //         ]
+  //       );
+  //       const surahId = result.lastInsertRowId;
+  //       for (const translation of surahVerse.translations) {
+  //         await db.runAsync(
+  //           `INSERT INTO Translations (surah_id, language, author, translation) VALUES (?, ?, ?, ?);`,
+  //           [surahId, translation.language, translation.author, translation.translation]
+  //         );
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error inserting Surah and translations:', error);
+  //     throw error;
+  //   }
+  //   console.log('inserting surah finished');
 
-  };
+  // };
 
-  const fetchSurahVerses = async (db) => {
-    try {
-      const results = await db.getAllAsync(`SELECT * FROM Surahs`);
-      return results;
-    } catch (error) {
-      console.error('Error fetching Surah verses:', error);
-      throw error;
-    }
-  };
+  // const fetchSurahVerses = async (db) => {
+  //   try {
+  //     const results = await db.getAllAsync(`SELECT * FROM Surahs`);
+  //     return results;
+  //   } catch (error) {
+  //     console.error('Error fetching Surah verses:', error);
+  //     throw error;
+  //   }
+  // };
 
-  const fetchTranslations = async (db) => {
-    try {
-      const results = await db.getAllAsync(
-        `SELECT * FROM Translations WHERE author = ? AND language = ?`,
-        [author, language]
-      );
-      return results;
-    } catch (error) {
-      console.error('Error fetching translations:', error);
-      throw error;
-    }
-  };
+  // const fetchTranslations = async (db) => {
+  //   try {
+  //     const results = await db.getAllAsync(
+  //       `SELECT * FROM Translations WHERE author = ? AND language = ?`,
+  //       [author, language]
+  //     );
+  //     return results;
+  //   } catch (error) {
+  //     console.error('Error fetching translations:', error);
+  //     throw error;
+  //   }
+  // };
 
   const fetchSurahData = async () => {
     console.log("fetchVerses&TranslationsFromApi");
@@ -149,33 +207,43 @@ const Verses = ({ route }) => {
     }
   };
 
+
   useEffect(() => {
-    console.log('useEffect');
+    console.log('useEffect2');
     const initialize = async () => {
 
       try {
-        const db = await initDB(surah.name);
-        const surahVerses = await fetchSurahVerses(db);
-        const translations = await fetchTranslations(db);
+        // surahVerseData.verses
+        // const db = await initDB(surah.name);
+        // const surahVerses = await fetchSurahVerses(db);
+        // const translations = await fetchTranslations(db);
 
-        if (surahVerses.length > 0 && translations.length > 0) {
-          setVerses(surahVerses);
-          setTranslations(translations);
-        } else {
-          // setLoading(true);
-          setVerses(surahVerseData.verses);
-          
-          // const surahData = await fetchSurahData();
-          await insertSurah(db, surahVerseData.verses);
+        // if (surahVerses.length > 0 && translations.length > 0) {
+        //   setVerses(surahVerses);
+        //   setTranslationsArray(translations);
+        // } else {
+        //   // setLoading(true);
+        //   setVerses(surahVerseData.verses);
 
-          const surahVerses = await fetchSurahVerses(db);
-          const translations = await fetchTranslations(db);
-          setVerses(surahVerses);
-          setTranslations(translations);
-        }
+        //   // const surahData = await fetchSurahData();
+        //   await insertSurah(db, surahVerseData.verses);
+
+        //   const surahVerses = await fetchSurahVerses(db);
+        //   const translations = await fetchTranslations(db);
+        //   setVerses(surahVerses);
+        //   setTranslationsArray(translations);
+        // }
+
+        const translations = surahVerseData.verses.map((verse) => {
+          const data = verse.translations.filter((trans) => trans.author === author && trans.language === language)
+          return data[0];
+        })
+        // console.log(translations);
+        setTranslationsArray(translations);
 
         const audioData = await fetchAudioData();
         setAudios(audioData);
+
 
       } catch (error) {
         console.error('Error:', error);
@@ -185,7 +253,11 @@ const Verses = ({ route }) => {
 
     };
     initialize();
+
   }, [surah]);
+
+  // console.log('TranslationsArray:', translationsArray.length);
+  // console.log('TranslationsArray:', translationsArray);
 
   if (loading) {
     return (
@@ -216,26 +288,25 @@ const Verses = ({ route }) => {
   return (
     <View style={styles.background}>
       <View style={styles.headingContainer}>
-        
         <View style={styles.heading}>
-          <Text style={styles.title}>{surah.name}</Text>
-          <Text>Chapter: {surah.chapter}</Text>
-          <Text style={{marginBottom: 5}}>Verses: {surah.totalVerses}</Text>
-          <Text>Revelation Place : </Text>
-          <Text>{capitalizeFirstLetter(surah.revelationPlace)}</Text>
+          <Text style={{fontSize: 24, color: 'white'}}>{surah.name}</Text>
+          <Text style={{color: 'white'}}>Chapter: {surah.chapter}</Text>
+          <Text style={{ marginBottom: 5, color: 'white' }}>Verses: {surah.totalVerses}</Text>
+          <Text style={{color: 'white'}}>Revelation Place : </Text>
+          <Text style={{color: 'white'}}>{capitalizeFirstLetter(surah.revelationPlace)}</Text>
         </View>
 
         <View>
           <ImageBackground source={mosque} resizeMode="cover" style={styles.mosqueImage}></ImageBackground>
         </View>
 
-        <Text style={{textAlign: 'right', paddingTop: 5, fontSize: 24}}>{surah.arabicName}</Text>
+        <Text style={{ textAlign: 'right', paddingTop: 5, fontSize: 24, color: 'white' }}>{surah.arabicName}</Text>
       </View>
       {surah.name !== 'Al-Fatihah' && <Text style={{ textAlign: 'center', fontSize: 25 }}>بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</Text>}
       <FlatList
         showsVerticalScrollIndicator={false}
         style={styles.verseContainer}
-        data={verses}
+        data={surahVerseData.verses}
         keyExtractor={(item) => item.verse}
         renderItem={({ item, index }) => (
           <View style={styles.verseRow}>
@@ -243,11 +314,11 @@ const Verses = ({ route }) => {
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 {!playing ? (
                   <TouchableOpacity onPress={() => audioLoadHandler(index)}>
-                    <Ionicons name="play" size={24} color="#795547" />
+                    <Ionicons name="play" size={24} color="#5523A2" />
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity onPress={audioStopHandler}>
-                    <Ionicons name="pause" size={24} color="#795547" />
+                    <Ionicons name="pause" size={24} color="#5523A2" />
                   </TouchableOpacity>
                 )}
                 {/* <TouchableOpacity onPress={() => console.log('Bookmark pressed')}>
@@ -257,17 +328,44 @@ const Verses = ({ route }) => {
                   <Ionicons name="share" size={24} color="#795547" />
                 </TouchableOpacity> */}
               </View>
-              <Text>{item.verse}</Text>
+              <View style={{backgroundColor: '#5523A2', width: 30, height: 30, borderRadius: 20, justifyContent: 'center', alignItems: 'center'}}>
+                <Text style={{color: 'white', fontWeight: '900', fontSize: 12}}>{item.verse}</Text>
+              </View>
             </View>
-            <View style={{paddingVertical: 10}}>
-            <Text style={[styles.verseText, {fontSize: fontSize + 5}]}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
-            {translations[index] && (
-              <Text style={[styles.translationText, {fontSize}]}>{translations[index].translation}</Text>
-            )}
+            <View style={{ paddingVertical: 10 }}>
+              <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
+              {/* {translationsArray[index] ? (
+                <Text style={[styles.translationText, { fontSize }]}>{translationsArray[index].translation}</Text>
+              ) : <Text style={{marginTop: 20}}>Loading Translations ...</Text>} */}
+
+              {translationsArray.length > 0 && <Text style={[styles.translationText, { fontSize, fontStyle: language === 'en' || language === 'hi' ? 'italic' : 'normal'}]}>{translationsArray[index].translation}</Text>}
+
             </View>
           </View>
         )}
       />
+
+
+      {/* Modal Component */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={{fontSize: 18, marginBottom: 10, fontWeight: 'bold', fontStyle: 'italic'}}>Summary</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalText}>{summary}</Text>
+            </ScrollView>
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -275,27 +373,25 @@ const Verses = ({ route }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#fffaf5',
+    backgroundColor: 'white',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headingContainer: {
-    backgroundColor: '#FBEDDC',
+  headingContainer: { 
+    elevation: 5,
+    backgroundColor: '#3B1A74',
     margin: 15,
     padding: 20,
-    borderRadius: 15,
+    borderRadius: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     height: 150,
   },
   heading: {
     flexDirection: 'column',
-  },
-  title: {
-    fontSize: 24
   },
   mosqueImage: {
     flex: 1,
@@ -312,6 +408,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   controlsContainer: {
+    elevation: 0.2,
     borderRadius: 5,
     marginVertical: 10,
     paddingVertical: 8,
@@ -319,7 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fceddc',
+    backgroundColor: '#F7F5FC',
   },
   verseText: {
     textAlign: 'right',
@@ -327,11 +424,53 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   translationText: {
+    color: '#1B1A55',
     marginTop: 15,
     flex: 1,
     marginBottom: 10,
-    fontStyle: 'italic'
+    paddingHorizontal: 5
   },
+  summarizeButton: {
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  summarizeButtonText: {
+    color: '#fff',
+    fontSize: 13,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    maxHeight: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'left',
+  },
+  modalText: {
+    fontSize: 15,
+    marginBottom: 15,
+    textAlign: 'justify',
+  },
+  closeButton: {
+    backgroundColor: '#3B1A74',
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  }
 });
 
 export default Verses;

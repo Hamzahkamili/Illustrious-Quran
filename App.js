@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Home from "./screens/homeScreen";
 import Bookmark from "./screens/Bookmark"; // Import both screens
 import Verses from "./screens/verses";
@@ -20,27 +20,54 @@ const BottomTab = createBottomTabNavigator();
 function BottomTabSlide() {
   return (
     <BottomTab.Navigator
-      initialRouteName="Illustrious Quran"
-      screenOptions={{
-        headerStyle: { backgroundColor: "#8C6A5D", borderTopLeftRadius: 20, borderTopRightRadius: 20, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
-        tabBarActiveTintColor: "#EAD196",
-        tabBarInactiveTintColor: "#d3d3d3",
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerStyle: {
+          backgroundColor: "white",
+        },
+        headerTitleStyle: { color: "#3B1A74", fontStyle: 'italic' },
+        tabBarActiveTintColor: "#3B1A74", // Purple for the active icon
+        tabBarInactiveTintColor: "#3B1A74", // Purple for inactive icons (for consistency)
         tabBarStyle: {
-          backgroundColor: "#8C6A5D",
-          borderTopColor: "#333",
-          borderTopLeftRadius: 15,
-          borderTopRightRadius: 15,
-          height: 60,
-          paddingBottom: 5,
+          borderTopWidth: 0,
+          backgroundColor: "white",
+          height: 85,
+          paddingBottom: 1,
           paddingTop: 5,
-          overflow: 'hidden', // Ensures the borderRadius is visible
+          overflow: 'hidden',
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "bold",
-          marginBottom: 5,
+        tabBarIcon: ({ focused, color, size }) => {
+          const iconName = {
+            Home: "home-outline",
+            PdfViewer: "document-outline",
+            Profile: "person-outline",
+            Settings: "settings-outline",
+          }[route.name];
+
+          return (
+            <View
+              style={{
+                width: focused ? 60 : 40, // Larger for active, smaller for inactive
+                height: focused ? 60 : 40,
+                borderRadius: 30, // Ensure circular shape
+                backgroundColor: focused ? "#3B1A74" : "#F8F5FC", // Purple for active, grey for inactive
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 1 
+                // position: focused ? "absolute" : "relative", 
+                // top: focused ? -5 : 0,
+                // zIndex: focused ? 1 : 0, 
+              }}
+            >
+              <Ionicons
+                name={iconName}
+                size={size}
+                color={focused ? "white" : "#3B1A74"} // Grey for active icon, purple for inactive
+              />
+            </View>
+          );
         },
-      }}
+      })}
     >
       <BottomTab.Screen
         name="Home"
@@ -48,11 +75,7 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "illustrious Quran",
-          headerTitleStyle: { color: "white", fontStyle: 'italic' },
-          tabBarLabel: "Home",
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
+          tabBarLabel: '',
         }}
       />
       <BottomTab.Screen
@@ -61,11 +84,7 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "The Holy Quran",
-          headerTitleStyle: {  color: "white", fontStyle: 'italic'  },
-          tabBarLabel: "PDF Viewer",
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name="document-outline" size={size} color={color} />
-          ),
+          tabBarLabel: "",
         }}
       />
       <BottomTab.Screen
@@ -74,11 +93,7 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "Profile",
-          headerTitleStyle: {  color: "white", fontStyle: 'italic'  },
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
+          tabBarLabel: "",
         }}
       />
       <BottomTab.Screen
@@ -87,11 +102,7 @@ function BottomTabSlide() {
         options={{
           headerShown: true,
           title: "Settings",
-          headerTitleStyle: {  color: "white", fontStyle: 'italic'  },
-          tabBarLabel: "Settings",
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          ),
+          tabBarLabel: "",
         }}
       />
     </BottomTab.Navigator>
@@ -113,8 +124,8 @@ export default function App() {
             component={Verses}
             options={{
               title: "Verses",
-              headerTitleStyle: { color: "#795547" },
-              headerStyle: { backgroundColor: "#fffaf5" },
+              headerTitleStyle: { color: "#3B1A74" },
+              headerStyle: { backgroundColor: "white" },
             }}
           />
           <Stack.Screen name="Login" component={Login} />

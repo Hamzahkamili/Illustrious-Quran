@@ -12,8 +12,7 @@ const DisplayCard = ({ title, value }) => {
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#3B1A74',
     borderRadius: 10,
     padding: 15,
     marginBottom: 5,
@@ -26,12 +25,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '500',
+    color: 'white',
   },
   value: {
     fontSize: 14,
-    color: '#555',
+    color: 'white',
+    fontStyle: 'italic'
   },
 });
 

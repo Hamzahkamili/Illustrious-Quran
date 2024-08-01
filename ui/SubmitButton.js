@@ -7,7 +7,7 @@ function SubmitButton({children, onPress, loading}) {
     {/* <TouchableOpacity onPress={onPress}>
         <Text>{children}</Text>
     </TouchableOpacity> */}
-    <Button style={{borderRadius: 0}} mode="contained" buttonColor="#795547" loading={loading} disabled={loading} onPress={onPress}>
+    <Button style={{borderRadius: 0}} mode="contained" buttonColor="#3B1A74" loading={loading} disabled={loading} onPress={onPress}>
        {children}
     </Button>
   </>

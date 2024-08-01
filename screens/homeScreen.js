@@ -172,15 +172,17 @@ const HomeScreen = ({ navigation }) => {
     <Pressable onPress={() => handleSurahPress(item)}>
       <View style={styles.surahContainer}>
         <View style={styles.innerContainer}>
+          <View style={{elevation: 10}}>
           <View style={styles.numberContainer}>
-            <Text style={styles.surahItem}>{item.chapter}</Text>
+            <Text style={[styles.surahItem, {color: '#3B1A74'}]}>{item.chapter}</Text>
+          </View>
           </View>
           <View>
             <Text style={styles.surahItem}>{item.name}</Text>
             <Text style={styles.surahDescription}>{item.totalVerses} Verses</Text>
           </View>
         </View>
-        <Text style={styles.surahItem}>{item.arabicName}</Text>
+        <Text style={[[styles.surahItem, {color: '#3B1A74',  fontSize: 17}]]}>{item.arabicName}</Text>
       </View>
     </Pressable>
   );
@@ -188,7 +190,7 @@ const HomeScreen = ({ navigation }) => {
   const renderModal = () => (
     <Modal visible={open} animationType="none">
       <View style={styles.modelContainer}>
-        <View>
+        <View style={{padding: 15}}>
           <Text style={styles.title}>illustrious Quran</Text>
           <Text style={styles.subtitle}>Learn Quran and recite once everyday</Text>
         </View>
@@ -225,15 +227,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#795547',
+    color: '#3B1A74',
+    fontStyle: 'italic',
   },
   subtitle: {
     fontSize: 16,
-    color: '#795547',
+    color: '#3B1A74',
     textAlign: 'center',
+    fontStyle: 'italic',
   },
   button: {
-    backgroundColor: '#795547',
+    backgroundColor: '#3B1A74',
     paddingVertical: 15,
     width: 150,
     borderRadius: 15,
@@ -246,7 +250,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 9,
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     paddingHorizontal: 10,
   },
   surahContainer: {
@@ -261,19 +265,21 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   numberContainer: {
+    borderColor: '#3B1A74',
     width: 50,
     height: 50,
     borderRadius: 10,
-    backgroundColor: '#fceddc',
+    backgroundColor: '#F8F5FC',
     alignItems: 'center',
     justifyContent: 'center',
   },
   surahItem: {
+    fontSize: 16,
     paddingVertical: 5,
-    color: '#795547',
+    color: 'black',
   },
   surahDescription: {
-    color: '#D7A86E',
+    color: 'grey',
     fontSize: 12,
   },
 });
