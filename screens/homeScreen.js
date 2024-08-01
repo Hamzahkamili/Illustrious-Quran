@@ -60,12 +60,6 @@ const HomeScreen = ({ navigation }) => {
     await Promise.all(insertPromises);
   }
 
-  const saveAllSurahsDataToDB = async (db, allSurahsData) => {
-    const jsonString = JSON.stringify(allSurahsData);
-    await db.runAsync('DELETE FROM surah_data');
-    await db.runAsync('INSERT INTO surah_data (data) VALUES (?)', [jsonString]);
-  }
-
   const fetchSurahsFromDB = async (db) => {
     const allRows = await db.getAllAsync('SELECT * FROM surahs');
     const dbSurahs = allRows.map(item => ({
@@ -84,6 +78,12 @@ const HomeScreen = ({ navigation }) => {
     // setSurahs(dbSurahs);
     return dbSurahs;
   };
+
+    // const saveAllSurahsDataToDB = async (db, allSurahsData) => {
+  //   const jsonString = JSON.stringify(allSurahsData);
+  //   await db.runAsync('DELETE FROM surah_data');
+  //   await db.runAsync('INSERT INTO surah_data (data) VALUES (?)', [jsonString]);
+  // }
 
   const fetchAllSurahsDataFromDB = async (db) => {
     const allRows = await db.getAllAsync('SELECT data FROM surah_data LIMIT 1');
@@ -111,28 +111,28 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const fetchAllSurahsData = async () => {
-    console.log("Fetching all Surahs data");
-    setLoading(true);
+  // const fetchAllSurahsData = async () => {
+  //   console.log("Fetching all Surahs data");
+  //   setLoading(true);
 
-    const allSurahsData = [];
+  //   const allSurahsData = [];
 
-    for (let chapter = 1; chapter <= 114; chapter++) {
-      try {
-        const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${chapter}`);
-        const data = await response.json();
-        if (data?.data) {
-          data.data.sort((a, b) => a.verse - b.verse);
-          console.log(`Chapter ${chapter}`);
-          allSurahsData.push({ chapter, verses: data.data });
-        }
-      } catch (error) {
-        console.error(`Error fetching data for chapter ${chapter}:`, error);
-      }
-      setLoadingStatus(parseInt(chapter / 114 * 100))
-    }
-    return allSurahsData;
-  };
+  //   for (let chapter = 1; chapter <= 114; chapter++) {
+  //     try {
+  //       const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${chapter}`);
+  //       const data = await response.json();
+  //       if (data?.data) {
+  //         data.data.sort((a, b) => a.verse - b.verse);
+  //         console.log(`Chapter ${chapter}`);
+  //         allSurahsData.push({ chapter, verses: data.data });
+  //       }
+  //     } catch (error) {
+  //       console.error(`Error fetching data for chapter ${chapter}:`, error);
+  //     }
+  //     setLoadingStatus(parseInt(chapter / 114 * 100))
+  //   }
+  //   return allSurahsData;
+  // };
 
   useEffect(() => {
     const initialize = async () => {
@@ -152,9 +152,9 @@ const HomeScreen = ({ navigation }) => {
       if (storedAllSurahsData.length > 0) {
         setAllSurahsData(storedAllSurahsData);
       } else {
-        const fetchedAllSurahsData = await fetchAllSurahsData();
-        setAllSurahsData(fetchedAllSurahsData);
-        await saveAllSurahsDataToDB(db, fetchedAllSurahsData);
+        // const fetchedAllSurahsData = await fetchAllSurahsData();
+        // setAllSurahsData(fetchedAllSurahsData);
+        // await saveAllSurahsDataToDB(db, fetchedAllSurahsData);
       }
       setLoading(false);
 
@@ -162,12 +162,13 @@ const HomeScreen = ({ navigation }) => {
     initialize();
   }, []);
 
+
   const handleSurahPress = (surah) => {
     // console.log(surah.chapter);
     // console.log(allSurahsData[surah.chapter - 1]);
-    navigation.navigate('Verses', { surah, surahVerseData: allSurahsData[surah.chapter - 1] });
+    navigation.navigate('Verses', { surah, surahVerseData: allSurahsData.length > 0 ? allSurahsData[surah.chapter - 1] : []});
   };
-
+  // allSurahsData[surah.chapter - 1]
   const renderSurahItem = ({ item }) => (
     <Pressable onPress={() => handleSurahPress(item)}>
       <View style={styles.surahContainer}>
@@ -200,7 +201,7 @@ const HomeScreen = ({ navigation }) => {
         {loading ? <ActivityIndicator size="large" color="#795547" /> : <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>}
-        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources. {loadingStatus}% complete.</Text>}
+        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources.</Text>}
       </View>
     </Modal>
   );
