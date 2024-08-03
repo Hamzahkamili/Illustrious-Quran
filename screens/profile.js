@@ -6,8 +6,9 @@ import { logout } from "../store/authSlice";
 
 const Profile = () => {
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
-  console.log(isAuthenticated);
   const user = useSelector(state => state.auth.user);
+  // console.log(isAuthenticated);
+  // console.log(user);
   const navigation = useNavigation();
   const dispatch = useDispatch();
 

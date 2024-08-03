@@ -1,5 +1,5 @@
 export async function createNewUser(formData) {
-    const response = await fetch('https://illustriousquran-backend.onrender.com/v1/scripture/user/new', {
+    const response = await fetch('https://illustriousquran-backend-1.onrender.com/v1/scripture/user/new', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -20,7 +20,7 @@ export async function createNewUser(formData) {
 }
 
 export async function loginUser(formData) {
-    const response = await fetch('https://illustriousquran-backend.onrender.com/v1/scripture/user/login', {
+    const response = await fetch('https://illustriousquran-backend-1.onrender.com/v1/scripture/user/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

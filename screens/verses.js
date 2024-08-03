@@ -51,7 +51,7 @@ const Verses = ({ route, navigation }) => {
 
       try {
         const response = await axios.post(
-          "https://illustriousquran-backend.onrender.com/summarize", // Replace with your backend URL
+          "https://illustriousquran-backend-1.onrender.com/summarize", // Replace with your backend URL
           {
             surahName: surah.name,
             text: concatenatedTranslations,
@@ -202,7 +202,7 @@ const Verses = ({ route, navigation }) => {
   const fetchSurahInfo = async () => {
     console.log('fetchSurahInfo');
     try {
-      await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
+      await fetch(`https://illustriousquran-backend-1.onrender.com/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
         .then((response) => response.json())
         .then((data) => {
           data.data.sort((a, b) => a.verse - b.verse);
@@ -393,9 +393,9 @@ const Verses = ({ route, navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, marginBottom: 10, fontWeight: 'bold', fontStyle: 'italic' }}>Summary</Text>
+            <Text style={{ fontSize: fontSize, marginBottom: 10, fontWeight: 'bold', fontStyle: 'italic' }}>Summary</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalText}>{summary}</Text>
+              <Text style={[styles.modalText, {fontSize}]}>{summary}</Text>
             </ScrollView>
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>Close</Text>

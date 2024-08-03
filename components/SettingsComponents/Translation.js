@@ -76,6 +76,9 @@ const Translation = ({ languages, authors }) => {
                 boxStyle={styles.radioBox}
                 textStyle={styles.radioText}
               />
+              <Text></Text>
+              <Text></Text>
+              <Text></Text>
             </ScrollView>
           </>
         ) : (
@@ -129,7 +132,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   modalContent: {
-    padding: 20,
+    height: '100%',
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   row: {
     justifyContent: 'space-between', // Add space between columns

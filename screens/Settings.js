@@ -50,12 +50,12 @@ const Settings = () => {
 
   const fetchAllSurahsData = async () => {
     console.log("Fetching all Surahs data");
-    setLoading(true);
+    // setLoading(true);
 
     const allSurahsData = [];
     for (let chapter = 1; chapter <= 114; chapter++) {
       try {
-        const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${chapter}`);
+        const response = await fetch(`https://illustriousquran-backend-1.onrender.com/v1/scripture/quraan/search/${chapter}`);
         const data = await response.json();
         if (data?.data) {
           data.data.sort((a, b) => a.verse - b.verse);
@@ -67,23 +67,27 @@ const Settings = () => {
       }
       setLoadingStatus(parseInt(chapter / 114 * 100))
     }
-    setLoading(false);
+    // setLoading(false);
     return allSurahsData;
   };
 
   async function downloadHandler() {
     const db = await initDB();
+    setLoading(true)
     const fetchedAllSurahsData = await fetchAllSurahsData();
     await saveAllSurahsDataToDB(db, fetchedAllSurahsData);
     Alert.alert('Downloaded', 'All Surahs data downloaded successfully. Please restart the app to see the changes.', [{ text: 'Okay', onPress: () => NativeModules.DevSettings.reload() }])
+    setLoading(false)
   }
 
   useEffect(() => {
     console.log('useEffect...');
     async function fetchDataFromDBbase() {
+      setLoading(true);
       const db = await initDB();
       const data = await fetchAllSurahsDataFromDB(db);
       setAllSurahsData(data);
+      setLoading(false);
     }
     fetchDataFromDBbase();
   }, [])

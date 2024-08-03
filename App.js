@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Home from "./screens/homeScreen";
 import Bookmark from "./screens/Bookmark"; // Import both screens
 import Verses from "./screens/verses";
@@ -10,9 +10,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import PdfViewer from "./screens/PdfViewer";
+import { useContext, useEffect, useState } from "react";
+import authSlice, { addUserToken } from "./store/authSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();
@@ -109,10 +112,9 @@ function BottomTabSlide() {
   );
 }
 
-export default function App() {
+function Navigation() {
   return (
-    <Provider store={store}>
-      <NavigationContainer>
+    <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen
             name="HomeScreen"
@@ -132,6 +134,36 @@ export default function App() {
           <Stack.Screen name="Signup" component={Signup} />
         </Stack.Navigator>
       </NavigationContainer>
+  )
+}
+
+
+function Root() {
+  const dispatch = useDispatch();
+  const [isTryingLogin, setIsTryingLogin] = useState(true)
+
+  useEffect(() => {
+    async function fetchToken() {
+      const storedUser = await AsyncStorage.getItem('user')
+      // console.log(storedUser);
+      const storedToken = await AsyncStorage.getItem('token')
+      if (storedToken) {
+        dispatch(addUserToken({ token: storedToken, user: JSON.parse(storedUser) }));
+      }
+      setIsTryingLogin(false)
+    }
+    fetchToken()
+  }, [])
+  // if (isTryingLogin) {
+  //   return <ActivityIndicator style={{flex: 1}}/>
+  // }
+  return <Navigation />
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <Root />
     </Provider>
   );
 }

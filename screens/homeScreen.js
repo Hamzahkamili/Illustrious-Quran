@@ -100,7 +100,7 @@ const HomeScreen = ({ navigation }) => {
     setLoading(true);
     try {
       // const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
-      const response = await fetch("https://illustriousquran-backend.onrender.com/v1/scripture/chapterMetaData/all");
+      const response = await fetch("https://illustriousquran-backend-1.onrender.com/v1/scripture/chapterMetaData/all");
       const data = await response.json();
       data?.data.sort((a, b) => a.chapter - b.chapter);
       // console.log("Surahs: ", data?.data);
@@ -201,7 +201,7 @@ const HomeScreen = ({ navigation }) => {
         {loading ? <ActivityIndicator size="large" color="#795547" /> : <TouchableOpacity style={styles.button} onPress={() => setOpen(false)}>
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>}
-        {loading && <Text style={{ marginVertical: 10 }}>Downloading resources.</Text>}
+        {loading && <Text style={{ marginVertical: 10 }}>Loading Assets</Text>}
       </View>
     </Modal>
   );
