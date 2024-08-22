@@ -3,14 +3,14 @@ import { Text, View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'rea
 import RadioButtonRN from 'radio-buttons-react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDispatch } from "react-redux";
-import { addArabicText } from '../../store/settingsSlice';
+import { addTafseer } from '../../store/settingsSlice';
 
-const ArabicText = ({ textStyle, title }) => {
+const TafseerText = ({ textStyle, title }) => {
   const dispatch = useDispatch();
   const [textModelOpen, setTextModelOpen] = useState(false);
 
   function handleRadioClick(e) {
-    dispatch(addArabicText({ id: e.label }));
+    dispatch(addTafseer({ id: e.label }));
     setTextModelOpen(false);
   }
 
@@ -41,7 +41,7 @@ const ArabicText = ({ textStyle, title }) => {
   );
 }
 
-export default ArabicText;
+export default TafseerText;
 
 const styles = StyleSheet.create({
   container: {

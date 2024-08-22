@@ -15,6 +15,7 @@ const Verses = ({ route, navigation }) => {
   const language = useSelector((state) => state.settings.language);
   const author = useSelector((state) => state.settings.author);
   const fontSize = useSelector(state => state.settings.fontSize);
+  const tafseer = useSelector(state => state.settings.tafseer);
 
   const { surah } = route.params;
   const { surahVerseData } = route.params;
@@ -26,15 +27,17 @@ const Verses = ({ route, navigation }) => {
   const [soundObject, setSound] = useState(new Audio.Sound());
   const [summary, setSummary] = useState('')
   const [summarizeLoading, setSummarizeLoading] = useState(false);
+  const [surahTafseer, setSurahTafseer] = useState([]);
+  const [verseTafseer, setVerseTafseer] = useState([]);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible2, setModalVisible2] = useState(false);
 
   // console.log(surahVerseData.verses[0].translations);
   // console.log(author);
   // console.log(language);
 
   async function handleSummarization() {
-    console.log('Summarizing: ', concatenatedTranslations);
     setSummarizeLoading(true);
 
     console.log('Starting to summarize');
@@ -45,13 +48,13 @@ const Verses = ({ route, navigation }) => {
       concatenatedTranslations = translationsArray.map(trans => trans.translation).join(' ');
     }
 
-    console.log(surah.name);
-    console.log(concatenatedTranslations);
+    // console.log(surah.name);
+    // console.log(concatenatedTranslations);
     if (concatenatedTranslations !== '') {
 
       try {
         const response = await axios.post(
-          "https://illustriousquran-backend-1.onrender.com/summarize", // Replace with your backend URL
+          `${process.env.EXPO_PUBLIC_API_URL}/summarize`, // Replace with your backend URL
           {
             surahName: surah.name,
             text: concatenatedTranslations,
@@ -63,12 +66,12 @@ const Verses = ({ route, navigation }) => {
             },
           }
         )
-        // console.log(response.data.summary);
+        console.log(response.data.summary);
         setSummary(response.data.summary);
         setModalVisible(true)
       } catch (error) {
         console.error("Error fetching summary:", error);
-        Alert.alert("Model Overloaded !", "Please try again later", [{ text: "Okay" }]);
+        Alert.alert("Model Overloaded !", "Please check your internet conncetion or try again later", [{ text: "Okay" }]);
       } finally {
         setSummarizeLoading(false);
       }
@@ -183,26 +186,28 @@ const Verses = ({ route, navigation }) => {
   //   }
   // };
 
-  const fetchSurahData = async () => {
-    console.log("fetchVerses&TranslationsFromApi");
+  // const fetchSurahData = async () => {
+  //   console.log("fetchVerses&TranslationsFromApi");
 
-    try {
-      // const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
-      const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${surah.chapter}`);
-      const data = await response.json();
-      data?.data.sort((a, b) => a.verse - b.verse);
-      // console.log("Verses&Translations: ", data?.data);
-      return data?.data;
-    } catch (error) {
-      console.error("Error fetching surah data:", error);
-      throw error;
-    }
-  };
+  //   try {
+  //     // const response = await fetch(`http://192.168.29.253:3000/v1/scripture/quraan/search/${surah.chapter}`);
+  //     const response = await fetch(`https://illustriousquran-backend.onrender.com/v1/scripture/quraan/search/${surah.chapter}`);
+  //     const data = await response.json();
+  //     data?.data.sort((a, b) => a.verse - b.verse);
+  //     // console.log("Verses&Translations: ", data?.data);
+  //     return data?.data;
+  //   } catch (error) {
+  //     console.error("Error fetching surah data:", error);
+  //     throw error;
+  //   }
+  // };
 
   const fetchSurahInfo = async () => {
+    console.log(process.env.EXPO_PUBLIC_API_URL);
+    
     console.log('fetchSurahInfo');
     try {
-      await fetch(`https://illustriousquran-backend-1.onrender.com/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
+      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/v1/scripture/quraan/get?language=${language}&chapter=${Number(surah.chapter)}&author=${author}&text=${arabicText}`)
         .then((response) => response.json())
         .then((data) => {
           data.data.sort((a, b) => a.verse - b.verse);
@@ -230,11 +235,27 @@ const Verses = ({ route, navigation }) => {
     }
   };
 
+  const fetchSurahTafseer = async () => {
+    console.log("fetchSurahTafseer");
+
+    try {
+      const response = await fetch(`https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${tafseer}/${surah.chapter}.json`);
+      const data = await response.json();
+      // console.log("Tafseer: ", data.ayahs.sort((a, b) => a.ayah - b.ayah));
+      data.ayahs.sort((a, b) => a.ayah - b.ayah)
+      setSurahTafseer(data.ayahs);
+    } catch (error) {
+      console.error("Error fetching tafseer data:", error);
+      throw error;
+    }
+  };
+
 
   useEffect(() => {
     console.log('useEffect2');
     const initialize = async () => {
 
+      // setLoading(true);
       try {
         if (surahVerseData.length === 0) {
           setLoading(true);
@@ -251,6 +272,8 @@ const Verses = ({ route, navigation }) => {
 
         const audioData = await fetchAudioData();
         setAudios(audioData);
+
+        fetchSurahTafseer()
 
 
       } catch (error) {
@@ -277,6 +300,10 @@ const Verses = ({ route, navigation }) => {
   }
 
   const audioLoadHandler = async (index) => {
+    if (audios.length === 0) {
+      Alert.alert("Audio Not Available", "Please check your internet connection", [{ text: "Okay" }]);
+      return;
+    }
     setPlaying(true);
     await soundObject.unloadAsync();
     await soundObject.loadAsync({ uri: audios[index].audio });
@@ -296,6 +323,18 @@ const Verses = ({ route, navigation }) => {
 
   // console.log('VersesOnline:', verses);
   // console.log('VersesOffline:', surahVerseData.verses);
+
+  handleTafseerClick = (item) => {
+    if (surahTafseer.length > 0) {
+      setVerseTafseer(surahTafseer[item.verse - 1].text)
+      setModalVisible2(true);
+    } else {
+      Alert.alert("Tafseer Not Available", "Please check your internet connection", [{ text: "Okay" }]);
+    }
+  }
+
+  // console.log('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ'.slice(0, 40));
+  // console.log('alm بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ'.replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ'.slice(0, 40), ""));
 
   return (
     <View style={styles.background}>
@@ -334,13 +373,16 @@ const Verses = ({ route, navigation }) => {
                     <Ionicons name="pause" size={24} color="#5523A2" />
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity onPress={() => handleTafseerClick(item)}>
+                    <Ionicons name="book" size={24} color="#5523A2" />
+                </TouchableOpacity>
               </View>
               <View style={{ backgroundColor: '#5523A2', width: 30, height: 30, borderRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: 'white', fontWeight: '900', fontSize: 12 }}>{index + 1}</Text>
               </View>
             </View>
             <View style={{ paddingVertical: 10 }}>
-              <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item.data.text : item.data.text.replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
+              <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item.data.text : arabicText === 'simple' ? item.data.text.replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : arabicText === 'simplePlain' ? item.data.text.replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : arabicText === 'simpleClean' ? item.data.text.replace('بسم الله الرحمن الرحيم', "") : arabicText === 'uthmani' ? item.data.text.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', "") : arabicText === 'uthmaniMinimal' ? item.data.text.replace('بِسمِ اللَّهِ الرَّحمـٰنِ الرَّحيمِ', "") : arabicText === 'simpleMinimal' ? item.data.text.replace('بِسمِ اللَّهِ الرَّحمـٰنِ الرَّحيمِ', "") : ''}</Text>
 
               {<Text style={[styles.translationText, { fontSize, fontStyle: language === 'en' || language === 'hi' ? 'italic' : 'normal' }]}>{item.data.translation}</Text>}
 
@@ -365,16 +407,20 @@ const Verses = ({ route, navigation }) => {
                     <Ionicons name="pause" size={24} color="#5523A2" />
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity onPress={() => handleTafseerClick(item)}>
+                    <Ionicons name="book" size={24} color="#5523A2" />
+                </TouchableOpacity>
               </View>
               <View style={{ backgroundColor: '#5523A2', width: 30, height: 30, borderRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: 'white', fontWeight: '900', fontSize: 12 }}>{item.verse}</Text>
               </View>
             </View>
             <View style={{ paddingVertical: 10 }}>
-              <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text>
-              {/* {translationsArray[index] ? (
-                <Text style={[styles.translationText, { fontSize }]}>{translationsArray[index].translation}</Text>
-              ) : <Text style={{marginTop: 20}}>Loading Translations ...</Text>} */}
+              {/* <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item[arabicText] ? item[arabicText] : item.text[arabicText] : item[arabicText] ? item[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text> */}
+              {/* <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item[arabicText] : item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "")}</Text> */}
+              <Text style={[styles.verseText, { fontSize: fontSize + 5 }]}>{surah.name === 'Al-Fatihah' ? item.text[arabicText] : arabicText === 'simple' ?  item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : arabicText === 'simplePlain' ?  item.text[arabicText].replace('بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ', "") : arabicText === 'simpleClean' ?  item.text[arabicText].replace('بسم الله الرحمن الرحيم', "") : arabicText === 'uthmani' ?  item.text[arabicText].replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', "") : arabicText === 'uthmaniMinimal' ?  item.text[arabicText].replace('بِسمِ اللَّهِ الرَّحمـٰنِ الرَّحيمِ', "") : arabicText === 'simpleMinimal' ?  item.text[arabicText].replace('بِسمِ اللَّهِ الرَّحمـٰنِ الرَّحيمِ', "") : ''}</Text>
+
+              
 
               {translationsArray.length > 0 && <Text style={[styles.translationText, { fontSize, fontStyle: language === 'en' || language === 'hi' ? 'italic' : 'normal' }]}>{translationsArray[index].translation}</Text>}
 
@@ -398,6 +444,25 @@ const Verses = ({ route, navigation }) => {
               <Text style={[styles.modalText, {fontSize}]}>{summary}</Text>
             </ScrollView>
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={modalVisible2}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible2(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontSize: fontSize, marginBottom: 10, fontWeight: 'bold', fontStyle: 'italic' }}>Tafseer</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.modalText, {fontSize}]}>{verseTafseer}</Text>
+            </ScrollView>
+            <TouchableOpacity onPress={() => setModalVisible2(false)} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -485,7 +550,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '95%',
     maxHeight: '80%',
     backgroundColor: 'white',
     borderRadius: 10,

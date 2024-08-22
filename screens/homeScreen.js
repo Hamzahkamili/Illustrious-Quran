@@ -100,7 +100,7 @@ const HomeScreen = ({ navigation }) => {
     setLoading(true);
     try {
       // const response = await fetch("http://192.168.29.253:3000/v1/scripture/chapterMetaData/all");
-      const response = await fetch("https://illustriousquran-backend-1.onrender.com/v1/scripture/chapterMetaData/all");
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/v1/scripture/chapterMetaData/all`);
       const data = await response.json();
       data?.data.sort((a, b) => a.chapter - b.chapter);
       // console.log("Surahs: ", data?.data);

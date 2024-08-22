@@ -9,6 +9,7 @@ import { addFontSize } from '../store/settingsSlice';
 import { Button } from 'react-native-paper';
 import * as SQLite from 'expo-sqlite';
 import { NativeModules } from 'react-native';
+import TafseerText from '../components/SettingsComponents/TafseerText';
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -16,6 +17,8 @@ const Settings = () => {
   const author = useSelector(state => state.settings.author);
   const arabicText = useSelector(state => state.settings.arabicText);
   const fontSize = useSelector(state => state.settings.fontSize);
+  const tafseer = useSelector(state => state.settings.tafseer);
+
   const [loadingStatus, setLoadingStatus] = useState(0)
   const [loading, setLoading] = useState();
   const [allSurahsData, setAllSurahsData] = useState([]);
@@ -24,6 +27,37 @@ const Settings = () => {
   const [languages, setLanguages] = useState([{ "_id": "en" }, { "_id": "fr" }, { "_id": "hi" }, { "_id": "ur" }]);
   const [languagePdfs, setlanguagePdfs] = useState([{ "_id": "km" }, { "_id": "gj" }]);
   const [authors, setAuthors] = useState({ en: [{ "label": "pickthall" }, { "label": "wahiduddin" }, { "label": "Ahmed Raza" }, { "label": "arberry" }, { "label": "sarwar" }, { "label": "hilali" }, { "label": "Ahmed Ali" }, { "label": "qaribullah" }, { "label": "mubarakpuri" }, { "label": "qarai" }, { "label": "itani" }, { "label": "shakir" }, { "label": "daryabadi" }, { "label": "sahih" }, { "label": "muadudi" }, { "label": "yusufali" }], fr: [{ "label": "web" }], hi: [{ "label": "farooq" }, { "label": "web" }], ur: [{ "label": "maududi" }, { "label": "junagarhi" }, { "label": "qadri" }, { "label": "web" }, { "label": "ahmed raza" }, { "label": "najafi" }, { "label": "ahmed ali" }, { "label": "jawadi" }, { "label": "jalandhry" }] });
+  const [tafseerAuthors, setTafseerAuthors] = useState([
+    { "label": "ar-tafseer-al-saddi" },
+    { "label": "ar-tafsir-ibn-kathir" },
+    { "label": "ar-tafsir-al-baghawi" },
+    { "label": "ar-tafseer-tanwir-al-miqbas" },
+    { "label": "ar-tafsir-al-wasit" },
+    { "label": "ar-tafsir-al-tabari" },
+    { "label": "ar-tafsir-muyassar" },
+    { "label": "ar-tafseer-al-qurtubi" },
+    // { "label": "bn-tafisr-fathul-majid" },
+    // { "label": "bn-tafseer-ibn-e-kaseer" },
+    // { "label": "bn-tafsir-ahsanul-bayaan" },
+    // { "label": "bn-tafsir-abu-bakr-zakaria" },
+    { "label": "en-tafisr-ibn-kathir" },
+    { "label": "en-tazkirul-quran" },
+    { "label": "en-kashf-al-asrar-tafsir" },
+    { "label": "en-al-qushairi-tafsir" },
+    { "label": "en-kashani-tafsir" },
+    { "label": "en-tafsir-al-tustari" },
+    { "label": "en-asbab-al-nuzul-by-al-wahidi" },
+    { "label": "en-tafsir-ibn-abbas" },
+    { "label": "en-al-jalalayn" },
+    { "label": "en-tafsir-maarif-ul-quran" },
+    // { "label": "kurd-tafsir-rebar" },
+    // { "label": "ru-tafseer-al-saddi" },
+    { "label": "ur-tafsir-fe-zalul-quran-syed-qatab" },
+    { "label": "ur-tafseer-ibn-e-kaseer" },
+    { "label": "ur-tafsir-bayan-ul-quran" },
+    { "label": "ur-tazkirul-quran" }
+  ]
+  )
 
   const initDB = async () => {
     const db = await SQLite.openDatabaseAsync('surahs.db', {
@@ -55,7 +89,7 @@ const Settings = () => {
     const allSurahsData = [];
     for (let chapter = 1; chapter <= 114; chapter++) {
       try {
-        const response = await fetch(`https://illustriousquran-backend-1.onrender.com/v1/scripture/quraan/search/${chapter}`);
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/v1/scripture/quraan/search/${chapter}`);
         const data = await response.json();
         if (data?.data) {
           data.data.sort((a, b) => a.verse - b.verse);
@@ -122,13 +156,18 @@ const Settings = () => {
             <View style={styles.line} />
           </View>
 
-          <Button disabled={loading || allSurahsData.length > 0 ? true : false} style={{marginTop: 5 ,marginBottom: 15, borderRadius: 0}} buttonColor="#3B1A74" mode="contained" onPress={downloadHandler}>
-            {loading ? loadingStatus+" %" : allSurahsData.length > 0 ? 'Resouce Downloaded' : 'Download Resources'}
+          <Button disabled={loading || allSurahsData.length > 0 ? true : false} style={{ marginTop: 5, marginBottom: 15, borderRadius: 0 }} buttonColor="#3B1A74" mode="contained" onPress={downloadHandler}>
+            {loading ? loadingStatus + " %" : allSurahsData.length > 0 ? 'Resouce Downloaded' : 'Download Resources'}
           </Button>
+
+          <Text style={styles.header}>Tafseer:</Text>
+          <View style={styles.row2}>
+            <TafseerText title={tafseer} textStyle={tafseerAuthors} />
+          </View>
 
           <Text style={styles.header}>Styles / Font Size:</Text>
           <View style={styles.row2}>
-            <ArabicText textStyle={textStyle} />
+            <ArabicText title="Arabic Text Style" textStyle={textStyle} />
             <View style={styles.sliderContainer}>
               <Slider
                 style={styles.slider}
